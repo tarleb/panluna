@@ -1,0 +1,21 @@
+language: generic
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - luarocks
+
+before_install:
+  - luarocks install --local busted
+
+install:
+  - luarocks make --local  rockspecs/panluna-scm-0.rockspec
+
+script:
+  - ~/.luarocks/bin/busted tests
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
