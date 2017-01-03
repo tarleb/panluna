@@ -21,8 +21,9 @@ local _version = "0.0.1"
 local MetaType = {}
 -- Create a subtype
 MetaType.__call =  function (ty, tag, ...)
-  local t = {tag = tag}
+  local t = {tag = tag, attributes = {...}}
   setmetatable(t, ty)
+  ty.__call = MetaType.__call
   ty.__index = ty
   return t
 end
@@ -31,7 +32,6 @@ MetaType.__index = MetaType
 local Type = {}
 setmetatable(Type, MetaType)
 Type.__index = Type
-Type.__call = MetaType.__call
 -- Create an instance of the type
 function Type:new(o)
   o = o or {}
@@ -64,14 +64,29 @@ Inline.definitions = {
   LineBreak = Inline "LineBreak",
   SoftBreak = Inline "SoftBreak",
   Space     = Inline "Space",
+  Str       = Inline("Str", {content = Text})
 }
+
+-- add constructors
+for _, v in pairs(Inline.definitions) do
+  function v:new(...)
+    local res = Inline:new{}
+    setmetatable(res, self)
+    self.__index = self
+    for i, attr in ipairs({...}) do
+      attr_name, attr_type = next(self.attributes[i])
+      res[i] = attr_type:new(attr)
+    end
+    return res
+  end
+end
 
 -- Convert to JSON structure
 function Inline:to_json_structure()
-  if next(self) ~= nil then
-    return {t = self.tag, c = self}
-  else
+  if next(self) == nil then
     return {t = self.tag}
+  else
+    return {t = self.tag, c = self[1]:to_json_structure()}
   end
 end
 
@@ -79,7 +94,6 @@ end
 function Inline.from_json_structure(x)
   return Inline.definitions[x.t]:new(x.c)
 end
-
 
 -- Return everything that should be exported from the module
 return {
