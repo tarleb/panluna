@@ -41,6 +41,23 @@ function Type:new(o)
 end
 
 
+-- Text
+Text = Type "Text"
+function Text:new(s)
+  local t = {value = s}
+  setmetatable(t, self)
+  self.__index = self
+  return t
+end
+function Text.from_json(s)
+  assert(type(s) == "string", "String expected as value of type 'Text'")
+  return self:new(s)
+end
+function Text:to_json_structure()
+  return self.value
+end
+
+
 -- Inline elements
 local Inline = Type "Inline"
 Inline.definitions = {

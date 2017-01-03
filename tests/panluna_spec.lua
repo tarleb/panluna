@@ -23,6 +23,14 @@ describe("Panluna library for pandoc filters in lua", function()
     assert.truthy(panluna._version)
   end)
 
+  describe("Basic data types", function()
+    describe("Text", function()
+      it("is converted to a normal string for JSON", function()
+        assert.is.equal("Hello, World", Text:new("Hello, World"):to_json_structure())
+      end)
+    end)
+  end)
+
   describe("Inline elements", function()
     local Inline = panluna.Inline
     it("has a definition for inlines", function()
