@@ -17,31 +17,31 @@ THIS SOFTWARE.
 ]]
 local _version = "0.0.1"
 
--- Types
+--- Meta type, used to construct types.
 local MetaType = {}
--- Create a subtype
-MetaType.__call =  function (ty, tag, ...)
-  local t = {tag = tag, attributes = {...}}
-  setmetatable(t, ty)
-  ty.__call = MetaType.__call
-  ty.__index = ty
-  return t
-end
 MetaType.__index = MetaType
-
-local Type = {}
-setmetatable(Type, MetaType)
-Type.__index = Type
--- Create an instance of the type
-function Type:new(o)
-  o = o or {}
+MetaType.__call =  function (ty, tag, ...)
+  return ty:create_subtype(tag, ...)
+end
+--- Create an instance of the type.
+function MetaType:new(o)
   setmetatable(o, self)
   self.__index = self
   return o
 end
+--- Create a subtype.
+function MetaType:create_subtype(tag, ...)
+  local t = {tag = tag, attributes = {...}}
+  setmetatable(t, self)
+  self.__call = MetaType.__call
+  self.__index = self
+  return t
+end
 
+--- Base type.
+local Type = MetaType:new{}
 
--- Text
+--- Class for normal text / strings.
 Text = Type "Text"
 function Text:new(s)
   local t = {value = s}
@@ -49,22 +49,78 @@ function Text:new(s)
   self.__index = self
   return t
 end
-function Text.from_json(s)
+function Text:from_json_structure(s)
   assert(type(s) == "string", "String expected as value of type 'Text'")
-  return self:new(s)
+  return Text:new(s)
 end
 function Text:to_json_structure()
   return self.value
 end
 
 
+--- A list of a specific type.
+local List = Type "List"
+function List:create_subtype(item_type, ...)
+  local mt = getmetatable(self)
+  local list_type = mt:create_subtype("List(" .. item_type.tag .. ")", ...)
+  list_type.item_type = item_type
+  setmetatable(list_type, self)
+  self.__index = self
+  return list_type
+end
+function List:from_json_structure(s)
+  local res = {}
+  for _, v in ipairs(s) do
+    res[#res + 1] = self.item_type:from_json_structure(v)
+  end
+  return self:new(res)
+end
+function List:to_json_structure()
+  local res = {}
+  for _, v in ipairs(self) do
+    res[#res + 1] = v:to_json_structure()
+  end
+  return res
+end
+
 -- Inline elements
 local Inline = Type "Inline"
+local Inlines = List(Inline)
+
+--- Convert to JSON structure
+function Inline:to_json_structure()
+  if next(self) == nil then
+    return {t = self.tag}
+  else
+    return {t = self.tag, c = self[1]:to_json_structure()}
+  end
+end
+
+-- Initialize from JSON structure
+function Inline:from_json_structure(x)
+  local element_type = Inline.definitions[x.t]
+  local element_content = x.c
+  local attributes = element_type.attributes
+  if type(element_content) ~= "table" or next(attributes) == nil then
+    return element_type:new(element_content)
+  else
+    attr_name, attr_type = next(attributes[1])
+    res = attr_type:from_json_structure(element_content)
+    return element_type:new(res)
+  end
+end
+
 Inline.definitions = {
-  LineBreak = Inline "LineBreak",
-  SoftBreak = Inline "SoftBreak",
-  Space     = Inline "Space",
-  Str       = Inline("Str", {content = Text})
+  Emph        = Inline("Emph",        {content = Inlines}),
+  LineBreak   = Inline "LineBreak",
+  SmallCaps   = Inline("SmallCaps",   {content = Inlines}),
+  SoftBreak   = Inline "SoftBreak",
+  Space       = Inline "Space",
+  Str         = Inline("Str",         {content = Text}),
+  Strikeout   = Inline("Strikeout",   {content = Inlines}),
+  Strong      = Inline("Strong",      {content = Inlines}),
+  Subscript   = Inline("Subscript",   {content = Inlines}),
+  Superscript = Inline("Superscript", {content = Inlines})
 }
 
 -- add constructors
@@ -81,22 +137,10 @@ for _, v in pairs(Inline.definitions) do
   end
 end
 
--- Convert to JSON structure
-function Inline:to_json_structure()
-  if next(self) == nil then
-    return {t = self.tag}
-  else
-    return {t = self.tag, c = self[1]:to_json_structure()}
-  end
-end
-
--- Initialize from JSON structure
-function Inline.from_json_structure(x)
-  return Inline.definitions[x.t]:new(x.c)
-end
-
 -- Return everything that should be exported from the module
 return {
   _version = _version,
-  Inline = Inline
+  Inline = Inline,
+  Inlines = Inlines,
+  List = List,
 }
