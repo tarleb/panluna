@@ -30,8 +30,8 @@ function MetaType:new(o)
   return o
 end
 --- Create a subtype.
-function MetaType:create_subtype(tag, ...)
-  local t = {tag = tag, attributes = {...}}
+function MetaType:create_subtype(tag, fields)
+  local t = {tag = tag, fields = (fields or {})}
   setmetatable(t, self)
   self.__call = MetaType.__call
   self.__index = self
@@ -42,7 +42,7 @@ end
 local Type = MetaType:new{}
 
 --- Class for normal text / strings.
-Text = Type "Text"
+local Text = Type "Text"
 function Text:new(s)
   local t = {value = s}
   setmetatable(t, self)
@@ -55,6 +55,14 @@ function Text:from_json_structure(s)
 end
 function Text:to_json_structure()
   return self.value
+end
+
+local Attributes = Type("Attributes")
+function Attributes:from_json_structure(t)
+  return self:new{identifier = t[1], classes = t[2], key_values = t[3]}
+end
+function Attributes:to_json_structure()
+  return {self.identifier, self.classes, self.key_values}
 end
 
 
@@ -77,8 +85,8 @@ function List:from_json_structure(s)
 end
 function List:to_json_structure()
   local res = {}
-  for _, v in ipairs(self) do
-    res[#res + 1] = v:to_json_structure()
+  for i, v in ipairs(self) do
+    res[i] = v:to_json_structure()
   end
   return res
 end
@@ -91,8 +99,14 @@ local Inlines = List(Inline)
 function Inline:to_json_structure()
   if next(self) == nil then
     return {t = self.tag}
-  else
+  elseif #self.fields == 0 then
     return {t = self.tag, c = self[1]:to_json_structure()}
+  else
+    c = {}
+    for i, field_value in ipairs(self) do
+      c[i] = field_value:to_json_structure()
+    end
+    return {t = self.tag, c = c}
   end
 end
 
@@ -100,13 +114,22 @@ end
 function Inline:from_json_structure(x)
   local element_type = Inline.definitions[x.t]
   local element_content = x.c
-  local attributes = element_type.attributes
-  if type(element_content) ~= "table" or next(attributes) == nil then
+  local fields = element_type.fields
+  if type(element_content) ~= "table" or next(fields) == nil then
     return element_type:new(element_content)
   else
-    attr_name, attr_type = next(attributes[1])
-    res = attr_type:from_json_structure(element_content)
-    return element_type:new(res)
+    if #fields == 0 then
+      attr_name, attr_type = next(fields)
+      res = attr_type:from_json_structure(element_content)
+      return element_type:new(res)
+    else
+      local res = {}
+      for i, field_def in ipairs(fields) do
+        attr_name, attr_type = next(field_def)
+        res[i] = attr_type:from_json_structure(element_content[i])
+      end
+      return element_type:new(unpack(res))
+    end
   end
 end
 
@@ -116,6 +139,8 @@ Inline.definitions = {
   SmallCaps   = Inline("SmallCaps",   {content = Inlines}),
   SoftBreak   = Inline "SoftBreak",
   Space       = Inline "Space",
+  Span        = Inline("Span",        {{attributes = Attributes},
+                                       {content = Inlines}}),
   Str         = Inline("Str",         {content = Text}),
   Strikeout   = Inline("Strikeout",   {content = Inlines}),
   Strong      = Inline("Strong",      {content = Inlines}),
@@ -129,9 +154,17 @@ for _, v in pairs(Inline.definitions) do
     local res = Inline:new{}
     setmetatable(res, self)
     self.__index = self
-    for i, attr in ipairs({...}) do
-      attr_name, attr_type = next(self.attributes[i])
-      res[i] = attr_type:new(attr)
+    if next(self.fields) ~= nil then
+      if #self.fields == 0 then
+        attr_name, attr_type = next(self.fields)
+        res[1] = attr_type:new(...)
+      else
+        local args = {...}
+        for i, field_def in ipairs(self.fields) do
+          attr_name, attr_type = next(field_def)
+          res[i] = attr_type:new(args[i])
+        end
+      end
     end
     return res
   end
@@ -140,7 +173,9 @@ end
 -- Return everything that should be exported from the module
 return {
   _version = _version,
+  Attributes = Attributes,
   Inline = Inline,
   Inlines = Inlines,
   List = List,
+  Text = Text,
 }
