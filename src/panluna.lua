@@ -91,12 +91,10 @@ function List:to_json_structure()
   return res
 end
 
--- Inline elements
-local Inline = Type "Inline"
-local Inlines = List(Inline)
-
+--- Document element
+local Element = Type "Element"
 --- Convert to JSON structure
-function Inline:to_json_structure()
+function Element:to_json_structure()
   if next(self) == nil then
     return {t = self.tag}
   elseif #self.fields == 0 then
@@ -109,10 +107,9 @@ function Inline:to_json_structure()
     return {t = self.tag, c = c}
   end
 end
-
 -- Initialize from JSON structure
-function Inline:from_json_structure(x)
-  local element_type = Inline.definitions[x.t]
+function Element:from_json_structure(x)
+  local element_type = self.definitions[x.t]
   local element_content = x.c
   local fields = element_type.fields
   if type(element_content) ~= "table" or next(fields) == nil then
@@ -132,6 +129,10 @@ function Inline:from_json_structure(x)
     end
   end
 end
+
+-- Inline elements
+local Inline = Element "Inline"
+local Inlines = List(Inline)
 
 Inline.definitions = {
   Emph        = Inline("Emph",        {content = Inlines}),
