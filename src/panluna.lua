@@ -185,12 +185,39 @@ Inline.definitions = {
 }
 Inline:create_constructors()
 
+local Doc = Type "Doc"
+function Doc:new(meta, body, version)
+  local t = {
+    meta = meta,
+    blocks = body,
+    ["pandoc-api-version"] = version or {1,17,0,4}
+  }
+  setmetatable(t, self)
+  self.__index = self
+  return t
+end
+function Doc:from_json_structure(t)
+  return Doc:new(
+    t.meta,
+    Blocks:from_json_structure(t.blocks),
+    t['pandoc-api-version']
+  )
+end
+function Doc:to_json_structure()
+  return {
+    meta = self.meta,
+    blocks = self.blocks:to_json_structure(),
+    ["pandoc-api-version"] = self["pandoc-api-version"]
+  }
+end
+
 -- Return everything that should be exported from the module
 return {
   _version = _version,     -- module version
   Attributes = Attributes, -- Element attributes
   Block = Block,
   Blocks = Blocks,
+  Doc = Doc,
   Inline = Inline,
   Inlines = Inlines,
   List = List,

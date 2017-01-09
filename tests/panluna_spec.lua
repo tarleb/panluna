@@ -19,6 +19,10 @@ package.path = package.path .. ";../src/?.lua"
 panluna = require "panluna"
 
 local Attributes = panluna.Attributes
+local Block = panluna.Block
+local Blocks = panluna.Blocks
+local Inline = panluna.Inline
+local Inlines = panluna.Inlines
 local List = panluna.List
 local Text = panluna.Text
 
@@ -228,6 +232,31 @@ describe("Panluna", function()
       it("can be initialized from a JSON-like structure", function()
         assert.is.same(test_div, Block:from_json_structure(test_json))
       end)
+    end)
+  end)
+
+  describe("Doc", function ()
+    local Doc = panluna.Doc
+    local Para = Block.definitions.Para
+    local test_inlines = Inlines:new{Inline.definitions.Str:new("Moin")}
+    local test_blocks_json = {{t = "Para", c = {{t = "Str", c = "Moin"}}}}
+    local test_json = {
+      meta = {},
+      blocks = test_blocks_json,
+      ["pandoc-api-version"] = {1,17,0,4},
+    }
+    local test_doc
+    it("is tagged correctly", function()
+      assert.equal("Doc", Doc.tag)
+    end)
+    it("can be instantiated", function()
+      test_doc = Doc:new({}, Blocks:new{Para:new(test_inlines)})
+    end)
+    it("can be converted to a JSON-like structure", function()
+      assert.is.same(test_json, test_doc:to_json_structure())
+    end)
+    it("can be initialized from a JSON-like structure", function()
+      assert.is.same(test_doc, Doc:from_json_structure(test_json))
     end)
   end)
 end)
