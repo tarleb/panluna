@@ -144,4 +144,90 @@ describe("Panluna", function()
       end)
     end)
   end)
+
+  describe("block element", function()
+    local Block = panluna.Block
+    local Inline = panluna.Inline
+    local inlines = List(Inline):new{
+      Inline.definitions.Str:new("Hello"),
+      Inline.definitions.Space:new(),
+      Inline.definitions.Str:new("World!")
+    }
+    local inlines_json = {
+      {t = "Str", c = "Hello"},
+      {t = "Space"},
+      {t = "Str", c = "World!"}
+    }
+
+    describe("HorizontalRule", function()
+      local HorizontalRule = Block.definitions.HorizontalRule
+      local test_json = {t = "HorizontalRule"}
+      local test_block
+      it("is tagged correctly", function()
+        assert.equal("HorizontalRule", HorizontalRule.tag)
+      end)
+      it("can be instantiated", function()
+        test_block = HorizontalRule:new()
+      end)
+      it("can be converted to a JSON-like structure", function()
+        assert.is.same(test_json, test_block:to_json_structure())
+      end)
+      it("can be initialized from a JSON-like structure", function()
+        assert.is.same(test_block, Block:from_json_structure(test_json))
+      end)
+    end)
+
+    --
+    -- Simple inline wrappers
+    --
+    local simple_wrappers = {
+      Para        = Block.definitions.Para,
+      Plain       = Block.definitions.Plain,
+    }
+    for tag, constructor in pairs(simple_wrappers) do
+      local test_block
+      local test_json = {t = tag, c = inlines_json}
+      describe(tag, function()
+        it("is tagged correctly", function()
+          assert.equal(tag, constructor.tag)
+        end)
+        it("can be instantiated", function()
+          test_block = constructor:new(inlines)
+        end)
+        it("can be converted to a JSON-like structure", function()
+          assert.is.same(test_json, test_block:to_json_structure())
+        end)
+        it("can be initialized from a JSON-like structure", function()
+          assert.is.same(test_block, Block:from_json_structure(test_json))
+        end)
+      end)
+    end
+
+    --
+    -- Div
+    --
+    local Div = Block.definitions.Div
+    describe("Div", function()
+      local test_attr      = panluna.Attributes:new{identifier = "TEST",
+                                                    classes = {"foo", "bar"},
+                                                    key_values = {key1 = val1}}
+      local test_attr_json = {"TEST", {"foo", "bar"}, {key1 = val1}}
+      local blocks         = {Block.definitions.Para:new(inlines)}
+      local blocks_json    = {{t = "Para", c = inlines_json}}
+      local test_json      = {t = "Div", c = {test_attr_json, blocks_json}}
+      local test_div
+      it("is tagged correctly", function()
+        assert.equal("Div", Div.tag)
+      end)
+      it("can be instantiated", function()
+        test_div = Block.definitions.Div:new(test_attr, blocks)
+      end)
+      it("can be converted to a JSON-like structure", function()
+        assert.is.same(test_json, test_div:to_json_structure())
+      end)
+      it("can be initialized from a JSON-like structure", function()
+        assert.is.same(test_div, Block:from_json_structure(test_json))
+      end)
+    end)
+  end)
 end)

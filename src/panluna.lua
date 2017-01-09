@@ -129,10 +129,45 @@ function Element:from_json_structure(x)
     end
   end
 end
+--- create constructors from definitions
+function Element:create_constructors()
+  local data_type = self
+  for _, constructor in pairs(data_type.definitions) do
+    function constructor:new(...)
+      local res = data_type:new{}
+      setmetatable(res, self)
+      self.__index = self
+      if next(self.fields) ~= nil then
+        if #self.fields == 0 then
+          attr_name, attr_type = next(self.fields)
+          res[1] = attr_type:new(...)
+        else
+          local args = {...}
+          for i, field_def in ipairs(self.fields) do
+            attr_name, attr_type = next(field_def)
+            res[i] = attr_type:new(args[i])
+          end
+        end
+      end
+      return res
+    end
+  end
+end
 
+--- Block elements
+local Block = Element "Block"
+local Blocks = List(Block)
 -- Inline elements
 local Inline = Element "Inline"
 local Inlines = List(Inline)
+
+Block.definitions = {
+  Div   = Block("Div",   {{attributes = Attributes}, {content = Blocks}}),
+  HorizontalRule = Block "HorizontalRule",
+  Para  = Block("Para",  {content = Inlines}),
+  Plain = Block("Plain", {content = Inlines}),
+}
+Block:create_constructors()
 
 Inline.definitions = {
   Emph        = Inline("Emph",        {content = Inlines}),
@@ -148,33 +183,14 @@ Inline.definitions = {
   Subscript   = Inline("Subscript",   {content = Inlines}),
   Superscript = Inline("Superscript", {content = Inlines})
 }
-
--- add constructors
-for _, v in pairs(Inline.definitions) do
-  function v:new(...)
-    local res = Inline:new{}
-    setmetatable(res, self)
-    self.__index = self
-    if next(self.fields) ~= nil then
-      if #self.fields == 0 then
-        attr_name, attr_type = next(self.fields)
-        res[1] = attr_type:new(...)
-      else
-        local args = {...}
-        for i, field_def in ipairs(self.fields) do
-          attr_name, attr_type = next(field_def)
-          res[i] = attr_type:new(args[i])
-        end
-      end
-    end
-    return res
-  end
-end
+Inline:create_constructors()
 
 -- Return everything that should be exported from the module
 return {
-  _version = _version,
-  Attributes = Attributes,
+  _version = _version,     -- module version
+  Attributes = Attributes, -- Element attributes
+  Block = Block,
+  Blocks = Blocks,
   Inline = Inline,
   Inlines = Inlines,
   List = List,
