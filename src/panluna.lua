@@ -212,7 +212,7 @@ function Doc:to_json_structure()
 end
 
 -- Return everything that should be exported from the module
-return {
+local M = {
   _version = _version,     -- module version
   Attributes = Attributes, -- Element attributes
   Block = Block,
@@ -223,3 +223,13 @@ return {
   List = List,
   Text = Text,
 }
+
+-- Include constructors
+for k, v in pairs(Inline.definitions) do
+  M[k] = v
+end
+for k, v in pairs(Block.definitions) do
+  M[k] = v
+end
+
+return M
