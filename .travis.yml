@@ -13,7 +13,7 @@ install:
   - luarocks make --local  rockspecs/panluna-scm-0.rockspec
 
 script:
-  - ~/.luarocks/bin/busted tests
+  - ~/.luarocks/bin/busted --output=TAP
 
 notifications:
   email:
