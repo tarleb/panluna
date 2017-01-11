@@ -17,29 +17,21 @@ THIS SOFTWARE.
 ]]
 local _version = "0.0.1"
 
---- Meta type, used to construct types.
-local MetaType = {}
-MetaType.__index = MetaType
-MetaType.__call =  function (ty, ...)
-  return ty:new(tag, ...)
-end
+--- Base type.
+local Type = {}
 --- Create an instance of the type.
-function MetaType:new(o)
+function Type:new(o)
   setmetatable(o, self)
-  self.__call = MetaType.__call
   self.__index = self
   return o
 end
 --- Create a subtype.
-function MetaType:make_subtype(tag, fields)
-  local t = {tag = tag, fields = (fields or {})}
+function Type:make_subtype(tag, fields)
+  local t = Type:new{tag = tag, fields = (fields or {})}
   setmetatable(t, self)
   self.__index = self
   return t
 end
-
---- Base type.
-local Type = MetaType:new{}
 
 --- Class for normal text / strings.
 local Text = Type:make_subtype "Text"
