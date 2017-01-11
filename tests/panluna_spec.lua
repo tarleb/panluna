@@ -152,7 +152,7 @@ describe("Panluna", function()
   describe("block element", function()
     local Block = panluna.Block
     local Inline = panluna.Inline
-    local inlines = List(Inline):new{
+    local inlines = List:make_subtype(Inline):new{
       Inline.definitions.Str:new("Hello"),
       Inline.definitions.Space:new(),
       Inline.definitions.Str:new("World!")

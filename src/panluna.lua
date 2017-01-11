@@ -20,20 +20,20 @@ local _version = "0.0.1"
 --- Meta type, used to construct types.
 local MetaType = {}
 MetaType.__index = MetaType
-MetaType.__call =  function (ty, tag, ...)
-  return ty:create_subtype(tag, ...)
+MetaType.__call =  function (ty, ...)
+  return ty:new(tag, ...)
 end
 --- Create an instance of the type.
 function MetaType:new(o)
   setmetatable(o, self)
+  self.__call = MetaType.__call
   self.__index = self
   return o
 end
 --- Create a subtype.
-function MetaType:create_subtype(tag, fields)
+function MetaType:make_subtype(tag, fields)
   local t = {tag = tag, fields = (fields or {})}
   setmetatable(t, self)
-  self.__call = MetaType.__call
   self.__index = self
   return t
 end
@@ -42,7 +42,7 @@ end
 local Type = MetaType:new{}
 
 --- Class for normal text / strings.
-local Text = Type "Text"
+local Text = Type:make_subtype "Text"
 function Text:new(s)
   local t = {value = s}
   setmetatable(t, self)
@@ -57,7 +57,7 @@ function Text:to_json_structure()
   return self.value
 end
 
-local Attributes = Type("Attributes")
+local Attributes = Type:make_subtype "Attributes"
 function Attributes:from_json_structure(t)
   return self:new{identifier = t[1], classes = t[2], key_values = t[3]}
 end
@@ -67,10 +67,10 @@ end
 
 
 --- A list of a specific type.
-local List = Type "List"
-function List:create_subtype(item_type, ...)
+local List = Type:make_subtype "List"
+function List:make_subtype(item_type, ...)
   local mt = getmetatable(self)
-  local list_type = mt:create_subtype("List(" .. item_type.tag .. ")", ...)
+  local list_type = mt:make_subtype("List(" .. item_type.tag .. ")", ...)
   list_type.item_type = item_type
   setmetatable(list_type, self)
   self.__index = self
@@ -92,7 +92,7 @@ function List:to_json_structure()
 end
 
 --- Document element
-local Element = Type "Element"
+local Element = Type:make_subtype "Element"
 --- Convert to JSON structure
 function Element:to_json_structure()
   if next(self) == nil then
@@ -155,37 +155,37 @@ function Element:create_constructors()
 end
 
 --- Block elements
-local Block = Element "Block"
-local Blocks = List(Block)
+local Block = Element:make_subtype "Block"
+local Blocks = List:make_subtype(Block)
 -- Inline elements
-local Inline = Element "Inline"
-local Inlines = List(Inline)
+local Inline = Element:make_subtype "Inline"
+local Inlines = List:make_subtype(Inline)
 
 Block.definitions = {
-  Div   = Block("Div",   {{attributes = Attributes}, {content = Blocks}}),
-  HorizontalRule = Block "HorizontalRule",
-  Para  = Block("Para",  {content = Inlines}),
-  Plain = Block("Plain", {content = Inlines}),
+  Div   = Block:make_subtype("Div",   {{attributes = Attributes}, {content = Blocks}}),
+  HorizontalRule = Block:make_subtype "HorizontalRule",
+  Para  = Block:make_subtype("Para",  {content = Inlines}),
+  Plain = Block:make_subtype("Plain", {content = Inlines}),
 }
 Block:create_constructors()
 
 Inline.definitions = {
-  Emph        = Inline("Emph",        {content = Inlines}),
-  LineBreak   = Inline "LineBreak",
-  SmallCaps   = Inline("SmallCaps",   {content = Inlines}),
-  SoftBreak   = Inline "SoftBreak",
-  Space       = Inline "Space",
-  Span        = Inline("Span",        {{attributes = Attributes},
+  Emph        = Inline:make_subtype("Emph",        {content = Inlines}),
+  LineBreak   = Inline:make_subtype "LineBreak",
+  SmallCaps   = Inline:make_subtype("SmallCaps",   {content = Inlines}),
+  SoftBreak   = Inline:make_subtype "SoftBreak",
+  Space       = Inline:make_subtype "Space",
+  Span        = Inline:make_subtype("Span",        {{attributes = Attributes},
                                        {content = Inlines}}),
-  Str         = Inline("Str",         {content = Text}),
-  Strikeout   = Inline("Strikeout",   {content = Inlines}),
-  Strong      = Inline("Strong",      {content = Inlines}),
-  Subscript   = Inline("Subscript",   {content = Inlines}),
-  Superscript = Inline("Superscript", {content = Inlines})
+  Str         = Inline:make_subtype("Str",         {content = Text}),
+  Strikeout   = Inline:make_subtype("Strikeout",   {content = Inlines}),
+  Strong      = Inline:make_subtype("Strong",      {content = Inlines}),
+  Subscript   = Inline:make_subtype("Subscript",   {content = Inlines}),
+  Superscript = Inline:make_subtype("Superscript", {content = Inlines})
 }
 Inline:create_constructors()
 
-local Doc = Type "Doc"
+local Doc = Type:make_subtype "Doc"
 function Doc:new(meta, body, version)
   local t = {
     meta = meta,
