@@ -1,6 +1,9 @@
 language: generic
 sudo: false
 
+env:
+  - PANDOC_VERSION=1.19.1-1
+
 addons:
   apt:
     packages:
@@ -8,6 +11,18 @@ addons:
 
 before_install:
   - luarocks install --local busted
+
+  # install pandoc
+  - mkdir pandoc-${PANDOC_VERSION}
+  - >
+      travis_retry curl --location --silent \
+        https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION%-*}/pandoc-${PANDOC_VERSION}-amd64.deb \
+        -o pandoc-${PANDOC_VERSION}/pandoc.deb
+  - cd pandoc-${PANDOC_VERSION}
+  - ar x pandoc.deb
+  - tar zvxf data.tar.gz
+  - cd ..
+  - export PATH="${PWD}/pandoc-${PANDOC_VERSION}/usr/bin:$PATH"
 
 install:
   - luarocks make --local  rockspecs/panluna-scm-0.rockspec
