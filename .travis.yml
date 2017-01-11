@@ -12,13 +12,14 @@ addons:
 before_install:
   # install luarocks
   - luarocks install --local busted
+  - luarocks install --local luacov
+  - luarocks install --local luacov-coveralls
 
   # install pandoc
   - DOWNLOAD_URL="https://github.com/jgm/pandoc/releases/download"
   - mkdir -p ${HOME}/.local
-  - |
-    travis_retry curl --location --silent \
-      ${DOWNLOAD_URL}/${PANDOC_VERSION%-*}/pandoc-${PANDOC_VERSION}-amd64.deb \
+  - travis_retry curl --location --silent
+      ${DOWNLOAD_URL}/${PANDOC_VERSION%-*}/pandoc-${PANDOC_VERSION}-amd64.deb
       -o /tmp/pandoc.deb
   - ar p /tmp/pandoc.deb data.tar.gz | tar xvz --strip-components 2 -C $HOME/.local/
 
@@ -30,7 +31,10 @@ install:
   - luarocks make --local  rockspecs/panluna-scm-0.rockspec
 
 script:
-  - busted --output=TAP
+  - busted --output=TAP --coverage
+
+after_success:
+  - luacov-coveralls
 
 notifications:
   email:
