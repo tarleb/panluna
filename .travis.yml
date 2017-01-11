@@ -10,25 +10,27 @@ addons:
       - luarocks
 
 before_install:
+  # install luarocks
   - luarocks install --local busted
 
   # install pandoc
-  - mkdir pandoc-${PANDOC_VERSION}
-  - >
-      travis_retry curl --location --silent \
-        https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION%-*}/pandoc-${PANDOC_VERSION}-amd64.deb \
-        -o pandoc-${PANDOC_VERSION}/pandoc.deb
-  - cd pandoc-${PANDOC_VERSION}
-  - ar x pandoc.deb
-  - tar zvxf data.tar.gz
-  - cd ..
-  - export PATH="${PWD}/pandoc-${PANDOC_VERSION}/usr/bin:$PATH"
+  - DOWNLOAD_URL="https://github.com/jgm/pandoc/releases/download"
+  - mkdir -p ${HOME}/.local
+  - |
+    travis_retry curl --location --silent \
+      ${DOWNLOAD_URL}/${PANDOC_VERSION%-*}/pandoc-${PANDOC_VERSION}-amd64.deb \
+      -o /tmp/pandoc.deb
+  - ar p /tmp/pandoc.deb data.tar.gz | tar xvz --strip-components 2 -C $HOME/.local/
+
+  # Set path to include pandoc and luarock executables
+  - PATH="${HOME}/.luarocks/bin:$PATH"
+  - PATH="${HOME}/.local/bin:$PATH"
 
 install:
   - luarocks make --local  rockspecs/panluna-scm-0.rockspec
 
 script:
-  - ~/.luarocks/bin/busted --output=TAP
+  - busted --output=TAP
 
 notifications:
   email:
