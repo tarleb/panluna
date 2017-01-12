@@ -60,9 +60,9 @@ end
 
 --- A list of a specific type.
 local List = Type:make_subtype "List"
-function List:make_subtype(item_type, ...)
+function List:make_subtype(item_type)
   local mt = getmetatable(self)
-  local list_type = mt:make_subtype("List(" .. item_type.tag .. ")", ...)
+  local list_type = mt:make_subtype("List[" .. item_type.tag .. "]")
   list_type.item_type = item_type
   setmetatable(list_type, self)
   self.__index = self
@@ -82,6 +82,7 @@ function List:to_json_structure()
   end
   return res
 end
+
 
 --- Document element
 local Element = Type:make_subtype "Element"
@@ -148,32 +149,35 @@ end
 
 --- Block elements
 local Block = Element:make_subtype "Block"
-local Blocks = List:make_subtype(Block)
--- Inline elements
+--- Inline elements
 local Inline = Element:make_subtype "Inline"
-local Inlines = List:make_subtype(Inline)
+
+--- List of blocks
+List[Block] = List:make_subtype(Block)
+--- List of inlines
+List[Inline] = List:make_subtype(Inline)
 
 Block.definitions = {
-  Div   = Block:make_subtype("Div",   {{attributes = Attributes}, {content = Blocks}}),
+  Div   = Block:make_subtype("Div",   {{attributes = Attributes}, {content = List[Block]}}),
   HorizontalRule = Block:make_subtype "HorizontalRule",
-  Para  = Block:make_subtype("Para",  {content = Inlines}),
-  Plain = Block:make_subtype("Plain", {content = Inlines}),
+  Para  = Block:make_subtype("Para",  {content = List[Inline]}),
+  Plain = Block:make_subtype("Plain", {content = List[Inline]}),
 }
 Block:create_constructors()
 
 Inline.definitions = {
-  Emph        = Inline:make_subtype("Emph",        {content = Inlines}),
+  Emph        = Inline:make_subtype("Emph",        {content = List[Inline]}),
   LineBreak   = Inline:make_subtype "LineBreak",
-  SmallCaps   = Inline:make_subtype("SmallCaps",   {content = Inlines}),
+  SmallCaps   = Inline:make_subtype("SmallCaps",   {content = List[Inline]}),
   SoftBreak   = Inline:make_subtype "SoftBreak",
   Space       = Inline:make_subtype "Space",
   Span        = Inline:make_subtype("Span",        {{attributes = Attributes},
-                                       {content = Inlines}}),
+                                       {content = List[Inline]}}),
   Str         = Inline:make_subtype("Str",         {content = Text}),
-  Strikeout   = Inline:make_subtype("Strikeout",   {content = Inlines}),
-  Strong      = Inline:make_subtype("Strong",      {content = Inlines}),
-  Subscript   = Inline:make_subtype("Subscript",   {content = Inlines}),
-  Superscript = Inline:make_subtype("Superscript", {content = Inlines})
+  Strikeout   = Inline:make_subtype("Strikeout",   {content = List[Inline]}),
+  Strong      = Inline:make_subtype("Strong",      {content = List[Inline]}),
+  Subscript   = Inline:make_subtype("Subscript",   {content = List[Inline]}),
+  Superscript = Inline:make_subtype("Superscript", {content = List[Inline]})
 }
 Inline:create_constructors()
 
@@ -191,7 +195,7 @@ end
 function Doc:from_json_structure(t)
   return Doc:new(
     t.meta,
-    Blocks:from_json_structure(t.blocks),
+    List[Block]:from_json_structure(t.blocks),
     t['pandoc-api-version']
   )
 end
@@ -208,10 +212,8 @@ local M = {
   _version = _version,     -- module version
   Attributes = Attributes, -- Element attributes
   Block = Block,
-  Blocks = Blocks,
   Doc = Doc,
   Inline = Inline,
-  Inlines = Inlines,
   List = List,
   Text = Text,
 }

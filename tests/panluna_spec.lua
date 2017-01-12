@@ -20,9 +20,7 @@ panluna = require "panluna"
 
 local Attributes = panluna.Attributes
 local Block = panluna.Block
-local Blocks = panluna.Blocks
 local Inline = panluna.Inline
-local Inlines = panluna.Inlines
 local List = panluna.List
 local Text = panluna.Text
 
@@ -152,7 +150,7 @@ describe("Panluna", function()
   describe("block element", function()
     local Block = panluna.Block
     local Inline = panluna.Inline
-    local inlines = List:make_subtype(Inline):new{
+    local inlines = List[Inline]:new{
       Inline.definitions.Str:new("Hello"),
       Inline.definitions.Space:new(),
       Inline.definitions.Str:new("World!")
@@ -238,7 +236,7 @@ describe("Panluna", function()
   describe("Doc", function ()
     local Doc = panluna.Doc
     local Para = Block.definitions.Para
-    local test_inlines = Inlines:new{Inline.definitions.Str:new("Moin")}
+    local test_inlines = List[Inline]:new{Inline.definitions.Str:new("Moin")}
     local test_blocks_json = {{t = "Para", c = {{t = "Str", c = "Moin"}}}}
     local test_json = {
       meta = {},
@@ -250,7 +248,7 @@ describe("Panluna", function()
       assert.equal("Doc", Doc.tag)
     end)
     it("can be instantiated", function()
-      test_doc = Doc:new({}, Blocks:new{Para:new(test_inlines)})
+      test_doc = Doc:new({}, List[Block]:new{Para:new(test_inlines)})
     end)
     it("can be converted to a JSON-like structure", function()
       assert.is.same(test_json, test_doc:to_json_structure())

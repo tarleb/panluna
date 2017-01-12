@@ -3,9 +3,9 @@ setmetatable(_G, {__index = panluna})
 
 return Doc:new(
   {},
-  List:make_subtype(Block):new{
+  List[Block]:new{
     Para:new(
-      List:make_subtype(Inline):new{
+      List[Inline]:new{
         Str:new("Hello")
       }
     )
