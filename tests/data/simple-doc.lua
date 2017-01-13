@@ -1,12 +1,12 @@
 local panluna = require "panluna"
 setmetatable(_G, {__index = panluna})
 
-return Doc:new(
+return Doc(
   {},
-  List[Block]:new{
-    Para:new(
-      List[Inline]:new{
-        Str:new("Hello")
+  List[Block]{
+    Para(
+      List[Inline]{
+        Str("Hello")
       }
     )
   }

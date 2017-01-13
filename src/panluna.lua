@@ -60,6 +60,9 @@ end
 
 --- A list of a specific type.
 local List = Type:make_subtype "List"
+function List.__call(t, ...)
+  return t:new(...)
+end
 function List:make_subtype(item_type)
   local mt = getmetatable(self)
   local list_type = mt:make_subtype("List[" .. item_type.tag .. "]")
@@ -131,11 +134,11 @@ function Element:create_constructors()
       setmetatable(res, self)
       self.__index = self
       if next(self.fields) ~= nil then
+        local args = {...}
         if #self.fields == 0 then
           attr_name, attr_type = next(self.fields)
-          res[1] = attr_type:new(...)
+          res[1] = attr_type:new(args[1])
         else
-          local args = {...}
           for i, field_def in ipairs(self.fields) do
             attr_name, attr_type = next(field_def)
             res[i] = attr_type:new(args[i])
@@ -149,8 +152,10 @@ end
 
 --- Block elements
 local Block = Element:make_subtype "Block"
+Block.__call = function (t, ...) return t:new(...) end
 --- Inline elements
 local Inline = Element:make_subtype "Inline"
+Inline.__call = function (t, ...) return t:new(...) end
 
 --- List of blocks
 List[Block] = List:make_subtype(Block)
@@ -182,6 +187,9 @@ Inline.definitions = {
 Inline:create_constructors()
 
 local Doc = Type:make_subtype "Doc"
+setmetatable(Doc, {
+  __call = function (t, meta, body, vrsn) return t:new(meta, body, vrsn) end
+})
 function Doc:new(meta, body, version)
   local t = {
     meta = meta,
