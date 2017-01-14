@@ -32,6 +32,36 @@ function Type:make_subtype(tag, fields)
   self.__index = self
   return t
 end
+--- create constructors from definitions
+function Type:generate_constructors(definitions)
+  -- safe self, as we'll use it to refer to a different object later.
+  local data_type = self
+  data_type.definitions = data_type.definitions or {}
+  for name, fields in pairs(definitions) do
+    local constructor = data_type:make_subtype(name, fields)
+    -- FIXME: checking fields on every invokation is inefficient
+    function constructor:new(...)
+      local res = data_type:new{}
+      setmetatable(res, self)
+      self.__index = self
+      if next(fields) ~= nil then
+        local args = {...}
+        if #self.fields == 0 then
+          attr_name, attr_type = next(fields)
+          res[1] = attr_type:new(args[1])
+        else
+          for i, field_def in ipairs(fields) do
+            attr_name, attr_type = next(field_def)
+            res[i] = attr_type:new(args[i])
+          end
+        end
+      end
+      return res
+    end
+    data_type[name] = constructor
+    data_type.definitions[name] = constructor
+  end
+end
 
 --- Class for normal text / strings.
 local Text = Type:make_subtype "Text"
@@ -125,30 +155,6 @@ function Element:from_json_structure(x)
     end
   end
 end
---- create constructors from definitions
-function Element:create_constructors()
-  local data_type = self
-  for _, constructor in pairs(data_type.definitions) do
-    function constructor:new(...)
-      local res = data_type:new{}
-      setmetatable(res, self)
-      self.__index = self
-      if next(self.fields) ~= nil then
-        local args = {...}
-        if #self.fields == 0 then
-          attr_name, attr_type = next(self.fields)
-          res[1] = attr_type:new(args[1])
-        else
-          for i, field_def in ipairs(self.fields) do
-            attr_name, attr_type = next(field_def)
-            res[i] = attr_type:new(args[i])
-          end
-        end
-      end
-      return res
-    end
-  end
-end
 
 --- Block elements
 local Block = Element:make_subtype "Block"
@@ -162,29 +168,26 @@ List[Block] = List:make_subtype(Block)
 --- List of inlines
 List[Inline] = List:make_subtype(Inline)
 
-Block.definitions = {
-  Div   = Block:make_subtype("Div",   {{attributes = Attributes}, {content = List[Block]}}),
-  HorizontalRule = Block:make_subtype "HorizontalRule",
-  Para  = Block:make_subtype("Para",  {content = List[Inline]}),
-  Plain = Block:make_subtype("Plain", {content = List[Inline]}),
+Block:generate_constructors{
+  Div            = {{attributes = Attributes}, {content = List[Block]}},
+  HorizontalRule = {},
+  Para           = {content = List[Inline]},
+  Plain          = {content = List[Inline]},
 }
-Block:create_constructors()
 
-Inline.definitions = {
-  Emph        = Inline:make_subtype("Emph",        {content = List[Inline]}),
-  LineBreak   = Inline:make_subtype "LineBreak",
-  SmallCaps   = Inline:make_subtype("SmallCaps",   {content = List[Inline]}),
-  SoftBreak   = Inline:make_subtype "SoftBreak",
-  Space       = Inline:make_subtype "Space",
-  Span        = Inline:make_subtype("Span",        {{attributes = Attributes},
-                                       {content = List[Inline]}}),
-  Str         = Inline:make_subtype("Str",         {content = Text}),
-  Strikeout   = Inline:make_subtype("Strikeout",   {content = List[Inline]}),
-  Strong      = Inline:make_subtype("Strong",      {content = List[Inline]}),
-  Subscript   = Inline:make_subtype("Subscript",   {content = List[Inline]}),
-  Superscript = Inline:make_subtype("Superscript", {content = List[Inline]})
+Inline:generate_constructors{
+  Emph        = {content = List[Inline]},
+  LineBreak   = {},
+  SmallCaps   = {content = List[Inline]},
+  SoftBreak   = {},
+  Space       = {},
+  Span        = {{attributes = Attributes}, {content = List[Inline]}},
+  Str         = {content = Text},
+  Strikeout   = {content = List[Inline]},
+  Strong      = {content = List[Inline]},
+  Subscript   = {content = List[Inline]},
+  Superscript = {content = List[Inline]},
 }
-Inline:create_constructors()
 
 local Doc = Type:make_subtype "Doc"
 setmetatable(Doc, {
