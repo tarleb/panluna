@@ -36,7 +36,7 @@ end
 function Type:generate_constructors(definitions)
   -- safe self, as we'll use it to refer to a different object later.
   local data_type = self
-  data_type.definitions = data_type.definitions or {}
+  data_type.constructors = data_type.constructors or {}
   for name, fields in pairs(definitions) do
     local constructor = data_type:make_subtype(name, fields)
     -- FIXME: checking fields on every invokation is inefficient
@@ -59,7 +59,7 @@ function Type:generate_constructors(definitions)
       return res
     end
     data_type[name] = constructor
-    data_type.definitions[name] = constructor
+    data_type.constructors[name] = constructor
   end
 end
 
@@ -135,7 +135,7 @@ function Element:to_json_structure()
 end
 -- Initialize from JSON structure
 function Element:from_json_structure(x)
-  local element_type = self.definitions[x.t]
+  local element_type = self.constructors[x.t]
   local element_content = x.c
   local fields = element_type.fields
   if type(element_content) ~= "table" or next(fields) == nil then
@@ -230,10 +230,10 @@ local M = {
 }
 
 -- Include constructors
-for k, v in pairs(Inline.definitions) do
+for k, v in pairs(Inline.constructors) do
   M[k] = v
 end
-for k, v in pairs(Block.definitions) do
+for k, v in pairs(Block.constructors) do
   M[k] = v
 end
 

@@ -59,9 +59,9 @@ describe("Panluna", function()
   describe("inline element", function()
     local Inline = panluna.Inline
     local inlines = {
-      Inline.definitions.Str:new("Hello"),
-      Inline.definitions.Space:new(),
-      Inline.definitions.Str:new("World!")
+      Inline.constructors.Str:new("Hello"),
+      Inline.constructors.Space:new(),
+      Inline.constructors.Str:new("World!")
     }
     local inlines_json = {
       {t = "Str", c = "Hello"},
@@ -73,9 +73,9 @@ describe("Panluna", function()
     -- nullary constructors
     --
     local nullary_constructors = {
-      LineBreak = Inline.definitions.LineBreak,
-      SoftBreak = Inline.definitions.SoftBreak,
-      Space     = Inline.definitions.Space,
+      LineBreak = Inline.constructors.LineBreak,
+      SoftBreak = Inline.constructors.SoftBreak,
+      Space     = Inline.constructors.Space,
     }
     for tag, constructor in pairs(nullary_constructors) do
       describe(tag, function()
@@ -102,12 +102,12 @@ describe("Panluna", function()
     -- Simple wrappers
     --
     local simple_wrappers = {
-      Emph        = Inline.definitions.Emph,
-      SmallCaps   = Inline.definitions.SmallCaps,
-      Strikeout   = Inline.definitions.Strikeout,
-      Strong      = Inline.definitions.Strong,
-      Subscript   = Inline.definitions.Subscript,
-      Superscript = Inline.definitions.Superscript,
+      Emph        = Inline.constructors.Emph,
+      SmallCaps   = Inline.constructors.SmallCaps,
+      Strikeout   = Inline.constructors.Strikeout,
+      Strong      = Inline.constructors.Strong,
+      Subscript   = Inline.constructors.Subscript,
+      Superscript = Inline.constructors.Superscript,
     }
     for tag, constructor in pairs(simple_wrappers) do
       local test_inline
@@ -134,7 +134,7 @@ describe("Panluna", function()
     --
     -- Span
     --
-    local Span = Inline.definitions.Span
+    local Span = Inline.constructors.Span
     describe("Span", function()
       local test_attr = panluna.Attributes:new{identifier = "TEST",
                                                classes = {"foo", "bar"},
@@ -146,10 +146,10 @@ describe("Panluna", function()
         assert.equal("Span", Span.tag)
       end)
       it("can be instantiated", function()
-        test_span = Inline.definitions.Span:new(test_attr, inlines)
+        test_span = Inline.constructors.Span:new(test_attr, inlines)
       end)
       it("can be used as a function", function()
-           test_span = Inline.definitions.Span(test_attr, inlines)
+           test_span = Inline.constructors.Span(test_attr, inlines)
       end)
       it("can be converted to a JSON-like structure", function()
         assert.is.same(test_json, test_span:to_json_structure())
@@ -164,9 +164,9 @@ describe("Panluna", function()
     local Block = panluna.Block
     local Inline = panluna.Inline
     local inlines = List[Inline]:new{
-      Inline.definitions.Str:new("Hello"),
-      Inline.definitions.Space:new(),
-      Inline.definitions.Str:new("World!")
+      Inline.constructors.Str:new("Hello"),
+      Inline.constructors.Space:new(),
+      Inline.constructors.Str:new("World!")
     }
     local inlines_json = {
       {t = "Str", c = "Hello"},
@@ -175,7 +175,7 @@ describe("Panluna", function()
     }
 
     describe("HorizontalRule", function()
-      local HorizontalRule = Block.definitions.HorizontalRule
+      local HorizontalRule = Block.constructors.HorizontalRule
       local test_json = {t = "HorizontalRule"}
       local test_block
       it("is tagged correctly", function()
@@ -199,8 +199,8 @@ describe("Panluna", function()
     -- Simple inline wrappers
     --
     local simple_wrappers = {
-      Para        = Block.definitions.Para,
-      Plain       = Block.definitions.Plain,
+      Para        = Block.constructors.Para,
+      Plain       = Block.constructors.Plain,
     }
     for tag, constructor in pairs(simple_wrappers) do
       local test_block
@@ -227,13 +227,13 @@ describe("Panluna", function()
     --
     -- Div
     --
-    local Div = Block.definitions.Div
+    local Div = Block.constructors.Div
     describe("Div", function()
       local test_attr      = panluna.Attributes:new{identifier = "TEST",
                                                     classes = {"foo", "bar"},
                                                     key_values = {key1 = val1}}
       local test_attr_json = {"TEST", {"foo", "bar"}, {key1 = val1}}
-      local blocks         = {Block.definitions.Para:new(inlines)}
+      local blocks         = {Block.constructors.Para:new(inlines)}
       local blocks_json    = {{t = "Para", c = inlines_json}}
       local test_json      = {t = "Div", c = {test_attr_json, blocks_json}}
       local test_div
@@ -241,7 +241,7 @@ describe("Panluna", function()
         assert.equal("Div", Div.tag)
       end)
       it("can be instantiated", function()
-        test_div = Block.definitions.Div:new(test_attr, blocks)
+        test_div = Block.constructors.Div:new(test_attr, blocks)
       end)
       it("can be used as a function", function()
         assert.is.same(test_div, Div(test_attr, blocks))
@@ -257,8 +257,8 @@ describe("Panluna", function()
 
   describe("Doc", function ()
     local Doc = panluna.Doc
-    local Para = Block.definitions.Para
-    local test_inlines = List[Inline]:new{Inline.definitions.Str:new("Moin")}
+    local Para = Block.constructors.Para
+    local test_inlines = List[Inline]:new{Inline.constructors.Str:new("Moin")}
     local test_blocks_json = {{t = "Para", c = {{t = "Str", c = "Moin"}}}}
     local test_json = {
       meta = {},
