@@ -38,6 +38,15 @@ function Type:generate_constructors(definitions)
   local data_type = self
   data_type.constructors = data_type.constructors or {}
   for name, fields in pairs(definitions) do
+    function get_field(field_def, arg)
+      local attr_name, attr_type = next(field_def)
+      if arg and attr_type == getmetatable(arg) then
+        return attr_name, arg
+      else
+        return attr_name, attr_type:new(arg)
+      end
+    end
+
     local constructor = data_type:make_subtype(name, fields)
     -- FIXME: checking fields on every invokation is inefficient
     function constructor:new(...)
@@ -46,13 +55,11 @@ function Type:generate_constructors(definitions)
       self.__index = self
       if next(fields) ~= nil then
         local args = {...}
-        if #self.fields == 0 then
-          attr_name, attr_type = next(fields)
-          res[1] = attr_type:new(args[1])
+        if #fields == 0 then
+          res[1] = select(2, get_field(fields, args[1]))
         else
           for i, field_def in ipairs(fields) do
-            attr_name, attr_type = next(field_def)
-            res[i] = attr_type:new(args[i])
+            res[i] = select(2, get_field(field_def, args[i]))
           end
         end
       end
@@ -66,6 +73,7 @@ end
 --- Class for normal text / strings.
 local Text = Type:make_subtype "Text"
 function Text:new(s)
+  assert(type(s) == "string", "Text can only be initialized from a string value.")
   local t = {value = s}
   setmetatable(t, self)
   self.__index = self
@@ -176,6 +184,7 @@ Block:generate_constructors{
 }
 
 Inline:generate_constructors{
+  Code        = {{attributes = Attributes}, {content = Text}},
   Emph        = {content = List[Inline]},
   LineBreak   = {},
   SmallCaps   = {content = List[Inline]},

@@ -17,12 +17,7 @@ THIS SOFTWARE.
 ]]
 package.path = package.path .. ";../src/?.lua"
 panluna = require "panluna"
-
-local Attributes = panluna.Attributes
-local Block = panluna.Block
-local Inline = panluna.Inline
-local List = panluna.List
-local Text = panluna.Text
+setmetatable(_G, {__index = panluna})
 
 describe("Panluna", function()
   it("exists and has a version", function()
@@ -156,6 +151,34 @@ describe("Panluna", function()
       end)
       it("can be initialized from a JSON-like structure", function()
         assert.is.same(test_span, Inline:from_json_structure(test_json))
+      end)
+    end)
+
+    --
+    -- Code
+    --
+    describe("Code", function()
+      local test_attr = panluna.Attributes:new{identifier = "TEST",
+                                               classes = {"foo", "bar"},
+                                               key_values = {key1 = value1}}
+      local test_attr_json = {"TEST", {"foo", "bar"}, {key1 = value1}}
+      local test_code_string = "Line 1\nLine 2\n\Line 4\n"
+      local test_json = {t = "Code", c = {test_attr_json, test_code_string}}
+      local test_code
+      it("is tagged correctly", function()
+        assert.equal("Code", Code.tag)
+      end)
+      it("can be instantiated", function()
+        test_code = Code:new(test_attr, Text:new(test_code_string))
+      end)
+      it("can be used as a function", function()
+        assert.is.same(test_code, Code(test_attr, Text:new(test_code_string)))
+      end)
+      it("can be converted to a JSON-like structure", function()
+        assert.is.same(test_json, test_code:to_json_structure())
+      end)
+      it("can be initialized from a JSON-like structure", function()
+        assert.is.same(test_code, Inline:from_json_structure(test_json))
       end)
     end)
   end)
