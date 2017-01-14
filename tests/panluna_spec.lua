@@ -34,9 +34,11 @@ describe("Panluna", function()
       local attr_json = {"TEST", {"foo", "bar"}, {key1 = "value1"}}
       local attr
       it("can be instantiated", function()
-        attr = panluna.Attributes:new{identifier = "TEST",
-                                      classes = {"foo", "bar"},
-                                      key_values = {key1 = "value1"}}
+        attr = Attributes:new{
+          identifier = "TEST",
+          classes = {"foo", "bar"},
+          key_values = {key1 = "value1"}
+        }
       end)
       it("can be initialized from a JSON-like structure", function()
         assert.is.same(attr, Attributes:from_json_structure(attr_json))
@@ -52,11 +54,10 @@ describe("Panluna", function()
   end)
 
   describe("inline element", function()
-    local Inline = panluna.Inline
     local inlines = {
-      Inline.constructors.Str:new("Hello"),
-      Inline.constructors.Space:new(),
-      Inline.constructors.Str:new("World!")
+      Str:new("Hello"),
+      Space:new(),
+      Str:new("World!")
     }
     local inlines_json = {
       {t = "Str", c = "Hello"},
@@ -68,9 +69,9 @@ describe("Panluna", function()
     -- nullary constructors
     --
     local nullary_constructors = {
-      LineBreak = Inline.constructors.LineBreak,
-      SoftBreak = Inline.constructors.SoftBreak,
-      Space     = Inline.constructors.Space,
+      LineBreak = LineBreak,
+      SoftBreak = SoftBreak,
+      Space     = Space,
     }
     for tag, constructor in pairs(nullary_constructors) do
       describe(tag, function()
@@ -97,12 +98,12 @@ describe("Panluna", function()
     -- Simple wrappers
     --
     local simple_wrappers = {
-      Emph        = Inline.constructors.Emph,
-      SmallCaps   = Inline.constructors.SmallCaps,
-      Strikeout   = Inline.constructors.Strikeout,
-      Strong      = Inline.constructors.Strong,
-      Subscript   = Inline.constructors.Subscript,
-      Superscript = Inline.constructors.Superscript,
+      Emph        = Emph,
+      SmallCaps   = SmallCaps,
+      Strikeout   = Strikeout,
+      Strong      = Strong,
+      Subscript   = Subscript,
+      Superscript = Superscript,
     }
     for tag, constructor in pairs(simple_wrappers) do
       local test_inline
@@ -129,11 +130,12 @@ describe("Panluna", function()
     --
     -- Span
     --
-    local Span = Inline.constructors.Span
     describe("Span", function()
-      local test_attr = panluna.Attributes:new{identifier = "TEST",
-                                               classes = {"foo", "bar"},
-                                               key_values = {key1 = value1}}
+      local test_attr = Attributes:new{
+        identifier = "TEST",
+        classes = {"foo", "bar"},
+        key_values = {key1 = value1}
+      }
       local test_attr_json = {"TEST", {"foo", "bar"}, {key1 = value1}}
       local test_json = {t = "Span", c = {test_attr_json, inlines_json}}
       local test_span
@@ -141,10 +143,10 @@ describe("Panluna", function()
         assert.equal("Span", Span.tag)
       end)
       it("can be instantiated", function()
-        test_span = Inline.constructors.Span:new(test_attr, inlines)
+        test_span = Span:new(test_attr, inlines)
       end)
       it("can be used as a function", function()
-           test_span = Inline.constructors.Span(test_attr, inlines)
+        test_span = Span(test_attr, inlines)
       end)
       it("can be converted to a JSON-like structure", function()
         assert.is.same(test_json, test_span:to_json_structure())
