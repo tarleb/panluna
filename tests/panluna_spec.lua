@@ -278,6 +278,34 @@ describe("Panluna", function()
         assert.is.same(test_div, Block:from_json_structure(test_json))
       end)
     end)
+
+    --
+    -- Code Block
+    --
+    describe("CodeBlock", function()
+      local test_attr = panluna.Attributes:new{identifier = "TEST",
+                                               classes = {"foo", "bar"},
+                                               key_values = {key1 = value1}}
+      local test_attr_json = {"TEST", {"foo", "bar"}, {key1 = value1}}
+      local test_code_string = "Line 1\nLine 2\n\Line 4\n"
+      local test_json = {t = "CodeBlock", c = {test_attr_json, test_code_string}}
+      local test_code
+      it("is tagged correctly", function()
+        assert.equal("CodeBlock", CodeBlock.tag)
+      end)
+      it("can be instantiated", function()
+        test_code = CodeBlock:new(test_attr, Text:new(test_code_string))
+      end)
+      it("can be used as a function", function()
+        assert.is.same(test_code, CodeBlock(test_attr, Text:new(test_code_string)))
+      end)
+      it("can be converted to a JSON-like structure", function()
+        assert.is.same(test_json, test_code:to_json_structure())
+      end)
+      it("can be initialized from a JSON-like structure", function()
+        assert.is.same(test_code, Block:from_json_structure(test_json))
+      end)
+    end)
   end)
 
   describe("Doc", function ()

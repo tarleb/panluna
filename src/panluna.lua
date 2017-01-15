@@ -177,6 +177,7 @@ List[Block] = List:make_subtype(Block)
 List[Inline] = List:make_subtype(Inline)
 
 Block:generate_constructors{
+  CodeBlock      = {{attributes = Attributes}, {content = Text}},
   Div            = {{attributes = Attributes}, {content = List[Block]}},
   HorizontalRule = {},
   Para           = {content = List[Inline]},
