@@ -1,4 +1,6 @@
 local reader = require 'lunamark.reader.markdown'
+local pandoc = require 'pandoc'
+
 local concat = function (list)
   if type(list) ~= 'table' or not next(list) then
     return {}
