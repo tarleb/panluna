@@ -176,7 +176,7 @@ function Reader (inputs, opts)
     fenced_divs = true,
     inline_notes = true,
     line_blocks = true,
-    notes = true,
+    notes = false,
     pipe_tables = true,
     raw_attribute = true,
     smart = true,
