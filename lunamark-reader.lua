@@ -46,10 +46,6 @@ local constant = function (c)
   return function () return pandoc.Inlines{pandoc.Str(c)} end
 end
 
-local function is_not_string (x)
-  return type(x) ~= 'string'
-end
-
 --- Partially apply an argument
 local function partap (fn, arg)
   return function(...) return fn(arg, ...) end
