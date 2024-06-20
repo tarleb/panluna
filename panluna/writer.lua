@@ -84,12 +84,15 @@ local function is_not_empty (item)
   return type(item) ~= 'table' or next(item)
 end
 
-local to_deflist_items = partap(
-  flip(pandoc.List.map),
-  function (item)
-    return {concat(item.term), concat(item.definitions):filter(is_not_empty)}
-  end
-)
+local function to_deflist_items (items)
+  return pandoc.List.map(
+    items,
+    function (item)
+      local term = concat(item.term)
+      local def = pandoc.List(item.definitions):map(concat)
+      return {term, def}
+    end)
+end
 
 local function task_items (rawitems)
   local items = pandoc.List{}
