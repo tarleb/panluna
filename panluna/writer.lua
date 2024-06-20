@@ -35,6 +35,12 @@ local function compose(fn1, fn2)
   end
 end
 
+--- Returns a new function that applies `fn` to all elements in a list.
+local map = function (fn)
+  return partap(flip(pandoc.List.map), fn)
+end
+
+
 local concat = function (list)
   if type(list) ~= 'table' or not next(list) then
     return {}
@@ -78,10 +84,6 @@ end
 
 local constant = function (c)
   return function () return pandoc.Inlines{pandoc.Str(c)} end
-end
-
-local function is_not_empty (item)
-  return type(item) ~= 'table' or next(item)
 end
 
 local function to_deflist_items (items)
@@ -136,7 +138,6 @@ local function lang_to_attr (lang)
   return {"", {utils.stringify(lang)}}
 end
 
-
 function M.new ()
   local metadata = {}
   local writer = {
@@ -153,7 +154,7 @@ function M.new ()
       return blocks
     end,
     ['blockquote'] = Bc(pandoc.BlockQuote),
-    ['bulletlist'] = Bc(pandoc.BulletList),
+    ['bulletlist'] = B(compose(pandoc.BulletList, map(concat))),
     ['code'] = I(pandoc.Code),
     ['definitionlist'] = B(compose(pandoc.DefinitionList, to_deflist_items)),
     ['display_html'] = B(partap(pandoc.RawBlock, 'html')),
