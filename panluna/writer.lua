@@ -6,6 +6,7 @@ local M = {}
 
 local pandoc = require 'pandoc'
 local utils = require 'pandoc.utils'
+local List = require 'pandoc.List'
 
 --- Pandoc element representing a space character.
 -- Calling pandoc functions is computationally expensive, so calling it just
@@ -37,7 +38,7 @@ end
 
 --- Returns a new function that applies `fn` to all elements in a list.
 local map = function (fn)
-  return papply(flip(pandoc.List.map), fn)
+  return papply(flip(List.map), fn)
 end
 
 
@@ -47,7 +48,7 @@ local concat = function (list)
   end
 
   local mt = type(getmetatable(list[1])) == 'table' and getmetatable(list[1])
-  local result = setmetatable({}, mt or pandoc.List)
+  local result = setmetatable({}, mt or List)
   for _, item in ipairs(list) do
     if type(item) ~= 'string' then
       result:extend(item)
@@ -77,24 +78,24 @@ local constant = function (c)
 end
 
 local function to_deflist_items (items)
-  return pandoc.List.map(
+  return List.map(
     items,
     function (item)
       local term = concat(item.term)
-      local def = pandoc.List(item.definitions):map(concat)
+      local def = List(item.definitions):map(concat)
       return {term, def}
     end)
 end
 
 local function task_items (rawitems)
-  local items = pandoc.List{}
+  local items = List{}
   for _, item in ipairs(rawitems) do
     local marker = item[1] == '[ ]' and {"☐", Space} or {"☒", Space}
     local content = concat(item[2])
     if content[1] and (content[1].t == 'Para' or content[1].t == 'Plain') then
       content[1].content = marker .. content[1].content
     else
-      pandoc.List.insert(content, 1, pandoc.Plain(marker))
+      List.insert(content, 1, pandoc.Plain(marker))
     end
     items:insert(content)
   end
@@ -116,11 +117,27 @@ local function to_pandoc_alignment (align)
   end
 end
 local function make_table (rows, caption)
-  local aligns = pandoc.List(table.remove(rows, 2)):map(to_pandoc_alignment)
+  local aligns = List(table.remove(rows, 2)):map(to_pandoc_alignment)
   local headers = table.remove(rows, 1)
   return utils.from_simple_table(
     pandoc.SimpleTable(caption or {}, aligns, {}, headers, rows)
   )
+end
+
+local function to_pandoc_cite (text_cites)
+  return function (cite)
+    local ct = text_cites and 'AuthorInText' or 'NormalCitation'
+    return pandoc.Citation(
+      cite.name,
+      cite.suppress_author and 'SuppressAuthor' or ct,
+      concat(cite.prenote),
+      concat(cite.postnote)
+    )
+  end
+end
+local function make_citations (text_cites, cites)
+  local pdcites = List(cites):map(to_pandoc_cite(text_cites))
+  return pandoc.Cite('placeholder', pdcites)
 end
 
 --- Creates an Attr object from a programming language specifier.
@@ -145,6 +162,8 @@ function M.new ()
     end,
     ['blockquote'] = Bc(pandoc.BlockQuote),
     ['bulletlist'] = B(compose(pandoc.BulletList, map(concat))),
+    ['citation'] = function(x) return x end,
+    ['citations'] = I(make_citations),
     ['code'] = I(pandoc.Code),
     ['definitionlist'] = B(compose(pandoc.DefinitionList, to_deflist_items)),
     ['display_html'] = B(papply(pandoc.RawBlock, 'html')),
@@ -162,7 +181,7 @@ function M.new ()
     ['lineblock'] = Bc(pandoc.LineBlock),
     ['linebreak'] = I(pandoc.LineBreak),
     ['mdash'] = constant '—',
-    ['nbsp'] = I(pandoc.SoftBreak),
+    ['nbsp'] = constant ' ',
     ['ndash'] = constant '–',
     ['note'] = Ic(pandoc.Note),
     ['paragraph'] = B(concat_args(pandoc.Para)),

@@ -5,7 +5,9 @@ local pandoc = require 'pandoc'
 function Reader (inputs, opts)
   local options = {
     bracketed_spans = true,
+    citations = true,
     definition_lists = true,
+    escaped_line_breaks = true,
     fenced_code_blocks = true,
     fenced_divs = true,
     inline_notes = true,
@@ -21,7 +23,5 @@ function Reader (inputs, opts)
   }
   local parser = reader.new(writer.new(), options)
   local blocks, meta = parser(tostring(inputs))
-  print(type(blocks), blocks)
-  print(type(meta), meta)
   return pandoc.Pandoc(blocks, meta)
 end
