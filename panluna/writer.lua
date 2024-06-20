@@ -17,7 +17,7 @@ local Space = pandoc.Space()
 --
 
 --- Partially apply an argument
-local function partap (fn, arg)
+local function papply (fn, arg)
   return function(...) return fn(arg, ...) end
 end
 
@@ -37,7 +37,7 @@ end
 
 --- Returns a new function that applies `fn` to all elements in a list.
 local map = function (fn)
-  return partap(flip(pandoc.List.map), fn)
+  return papply(flip(pandoc.List.map), fn)
 end
 
 
@@ -62,22 +62,12 @@ local concat_args = function (fn)
   end
 end
 
-local I = function(fn)
-  return function(...)
-    return pandoc.Inlines{fn(...)}
-  end
-end
-
+local I = papply(compose, pandoc.Inlines)
 local Ic = function (fn)
   return I(concat_args(fn))
 end
 
-local B = function(fn)
-  return function(...)
-    return pandoc.Blocks{fn(...)}
-  end
-end
-
+local B = papply(compose, pandoc.Blocks)
 local Bc = function (fn)
   return B(concat_args(fn))
 end
@@ -157,16 +147,16 @@ function M.new ()
     ['bulletlist'] = B(compose(pandoc.BulletList, map(concat))),
     ['code'] = I(pandoc.Code),
     ['definitionlist'] = B(compose(pandoc.DefinitionList, to_deflist_items)),
-    ['display_html'] = B(partap(pandoc.RawBlock, 'html')),
+    ['display_html'] = B(papply(pandoc.RawBlock, 'html')),
     ['div'] = B(concat_args(pandoc.Div)),
-    ['doublequoted'] = Ic(partap(pandoc.Quoted, 'DoubleQuote')),
+    ['doublequoted'] = Ic(papply(pandoc.Quoted, 'DoubleQuote')),
     ['ellipsis'] = constant '…',
     ['emphasis'] = Ic(pandoc.Emph),
     ['fenced_code'] = B(compose(flip(pandoc.CodeBlock), lang_to_attr)),
     ['header'] = Bc(flip(pandoc.Header)),
     ['hrule'] = B(pandoc.HorizontalRule),
     ['image'] = Ic(pandoc.Image),
-    ['inline_html'] = I(partap(pandoc.RawInline, 'html')),
+    ['inline_html'] = I(papply(pandoc.RawInline, 'html')),
     ['interblocksep'] = pandoc.Blocks{},
     ['link'] = Ic(pandoc.Link),
     ['lineblock'] = Bc(pandoc.LineBlock),
@@ -178,7 +168,7 @@ function M.new ()
     ['paragraph'] = B(concat_args(pandoc.Para)),
     ['plain'] = Bc(pandoc.Plain),
     ['rawinline'] = I(flip(pandoc.RawInline)),
-    ['singlequoted'] = Ic(partap(pandoc.Quoted, 'SingleQuote')),
+    ['singlequoted'] = Ic(papply(pandoc.Quoted, 'SingleQuote')),
     ['space'] = I(pandoc.Space),
     ['span'] = Ic(pandoc.Span),
     ['strikeout'] = Ic(pandoc.Strikeout),
