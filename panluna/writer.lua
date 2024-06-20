@@ -133,17 +133,21 @@ local function lang_to_attr (lang)
   return {"", {utils.stringify(lang)}}
 end
 
-local metadata = {}
 
 function M.new ()
+  local metadata = {}
   local writer = {
-    ['start_document'] = function () return {} end,
-    ['stop_document'] = function () return {} end,
+    ['start_document'] = function ()
+      metadata = {}
+      return nil
+    end,
+    ['stop_document'] = function () return nil end,
     ['get_metadata'] = function ()
       return metadata
     end,
     ['rope_to_output'] = function (result)
-      return result[2]
+      local blocks = concat(result[2])
+      return blocks
     end,
     ['blockquote'] = Bc(pandoc.BlockQuote),
     ['bulletlist'] = Bc(pandoc.BulletList),
