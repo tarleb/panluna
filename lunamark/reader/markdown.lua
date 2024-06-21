@@ -18,6 +18,9 @@ local utf8_lower do
   elseif pcall(require, "unicode") then -- try slnunicode
     local slnunicde = require "unicode"
     utf8_lower = slnunicde.utf8.lower
+  elseif pcall(require, "pandoc.text") then -- use pandoc.text
+    local text = require "pandoc.text"
+    utf8_lower = text.lower
   else
     error "no unicode library found"
   end

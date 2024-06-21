@@ -4,7 +4,6 @@
 --- Utility functions for lunamark.
 
 local M = {}
-local cosmo = require("cosmo")
 local rep  = string.rep
 local lpeg = require("lpeg")
 local Cs, P, S, lpegmatch = lpeg.Cs, lpeg.P, lpeg.S, lpeg.match
@@ -40,24 +39,6 @@ function M.find_template(name)
     return data
   else
     return false, "Could not find template '" .. fname .. "'"
-  end
-end
-
---- Implements a `sepby` directive for cosmo templates.
--- `$sepby{ myarray }[[$it]][[, ]]` will render the elements
--- of `myarray` separated by commas. If `myarray` is a string,
--- it will be treated as an array with one element.  If it is
--- `nil`, it will be treated as an empty array.
-function M.sepby(arg)
-  local a = arg[1]
-  if not a then
-    a = {}
-  elseif type(a) ~= "table" then
-    a = {a}
-  end
-  for i in ipairs(a) do
-     if i > 1 then cosmo.yield{_template=2} end
-     cosmo.yield{it = a[i], _template=1}
   end
 end
 
