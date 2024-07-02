@@ -44,11 +44,12 @@ end
 
 local concat = function (list)
   if type(list) ~= 'table' or not next(list) then
-    return {}
+    return pandoc.List{}
   end
 
   local mt = type(getmetatable(list[1])) == 'table' and getmetatable(list[1])
-  local result = setmetatable({}, mt or List)
+  mt = mt.extend and mt or List  -- must quack like a list
+  local result = setmetatable({}, mt)
   for _, item in ipairs(list) do
     if type(item) ~= 'string' then
       result:extend(item)
@@ -167,7 +168,7 @@ function M.new ()
     ['code'] = I(pandoc.Code),
     ['definitionlist'] = B(compose(pandoc.DefinitionList, to_deflist_items)),
     ['display_html'] = B(papply(pandoc.RawBlock, 'html')),
-    ['div'] = B(concat_args(pandoc.Div)),
+    ['div'] = Bc(pandoc.Div),
     ['doublequoted'] = Ic(papply(pandoc.Quoted, 'DoubleQuote')),
     ['ellipsis'] = constant '…',
     ['emphasis'] = Ic(pandoc.Emph),
@@ -184,7 +185,7 @@ function M.new ()
     ['nbsp'] = constant ' ',
     ['ndash'] = constant '–',
     ['note'] = Ic(pandoc.Note),
-    ['paragraph'] = B(concat_args(pandoc.Para)),
+    ['paragraph'] = Bc(pandoc.Para),
     ['plain'] = Bc(pandoc.Plain),
     ['rawinline'] = I(flip(pandoc.RawInline)),
     ['singlequoted'] = Ic(papply(pandoc.Quoted, 'SingleQuote')),
