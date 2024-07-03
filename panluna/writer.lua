@@ -4,6 +4,7 @@
 --- Lunamark writer that produces a Pandoc document.
 local M = {}
 
+local flatten = (require 'lunamark.util').flatten
 local pandoc = require 'pandoc'
 local utils = require 'pandoc.utils'
 local List = require 'pandoc.List'
@@ -41,8 +42,9 @@ local map = function (fn)
   return papply(flip(List.map), fn)
 end
 
-
-local concat = function (list)
+--- Walk and flatten
+--- FIXME: should use `lunamark.utils.rope`
+local function concat (list)
   if type(list) ~= 'table' or not next(list) then
     return pandoc.List{}
   end
@@ -51,7 +53,11 @@ local concat = function (list)
   mt = mt.extend and mt or List  -- must quack like a list
   local result = setmetatable({}, mt)
   for _, item in ipairs(list) do
-    if type(item) ~= 'string' then
+    if type(item) == 'function' then
+      result:extend(flatten(item()))
+    elseif type(item) == 'string' then
+      result:extend(pandoc.Inlines(item))
+    else
       result:extend(item)
     end
   end
