@@ -66,10 +66,21 @@ local unrope_args = function (fn)
   end
 end
 
-local I = papply(compose, pandoc.Inlines)
+local  function make_rope_creator (constr)
+  return function (fn)
+    return function (...)
+      local args = {...}
+      return function ()
+        return constr(fn(table.unpack(args)))
+      end
+    end
+  end
+end
+
+local I = make_rope_creator(pandoc.Inlines)
 local Ic = compose(I, unrope_args)
 
-local B = papply(compose, pandoc.Blocks)
+local B = make_rope_creator(pandoc.Blocks)
 local Bc = compose(B, unrope_args)
 
 local constant = function (c)
