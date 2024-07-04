@@ -1,4 +1,7 @@
 #!/usr/bin/env pandoc-lua
+-- Copyright © 2024 Albert Krewinkel. Released under MIT license.
+-- See the file LICENSE in the source for details.
+
 local io = require 'io'
 local os = require 'os'
 
