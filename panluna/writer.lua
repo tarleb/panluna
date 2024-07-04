@@ -4,7 +4,6 @@
 --- Lunamark writer that produces a Pandoc document.
 local M = {}
 
-local flatten = (require 'lunamark.util').flatten
 local pandoc = require 'pandoc'
 local utils = require 'pandoc.utils'
 local List = require 'pandoc.List'
@@ -12,7 +11,7 @@ local List = require 'pandoc.List'
 --- Pandoc element representing a space character.
 -- Calling pandoc functions is computationally expensive, so calling it just
 -- once should improve performance.
-local Space = pandoc.Space()
+local Space = pandoc.Inlines{pandoc.Space()}
 
 --
 -- Functional programming helpers
@@ -83,10 +82,6 @@ local Ic = compose(I, unrope_args)
 local B = make_rope_creator(pandoc.Blocks)
 local Bc = compose(B, unrope_args)
 
-local constant = function (c)
-  return function () return pandoc.Inlines{pandoc.Str(c)} end
-end
-
 local function to_deflist_items (items)
   return List.map(
     items,
@@ -100,7 +95,7 @@ end
 local function task_items (rawitems)
   local items = List{}
   for _, item in ipairs(rawitems) do
-    local marker = item[1] == '[ ]' and {"☐", Space} or {"☒", Space}
+    local marker = item[1] == '[ ]' and {"☐"} .. Space or {"☒"} .. Space
     local content = unrope(item[2])
     if content[1] and (content[1].t == 'Para' or content[1].t == 'Plain') then
       content[1].content = marker .. content[1].content
@@ -181,7 +176,7 @@ function M.new ()
     ['display_html']   = B(papply(pandoc.RawBlock, 'html')),
     ['div']            = Bc(pandoc.Div),
     ['doublequoted']   = Ic(papply(pandoc.Quoted, 'DoubleQuote')),
-    ['ellipsis']       = constant '…',
+    ['ellipsis']       = '…',
     ['emphasis']       = Ic(pandoc.Emph),
     ['fenced_code']    = B(compose(flip(pandoc.CodeBlock), lang_to_attr)),
     ['header']         = Bc(flip(pandoc.Header)),
@@ -192,18 +187,18 @@ function M.new ()
     ['link']           = Ic(pandoc.Link),
     ['lineblock']      = Bc(pandoc.LineBlock),
     ['linebreak']      = I(pandoc.LineBreak),
-    ['mdash']          = constant '—',
-    ['nbsp']           = constant ' ',
-    ['ndash']          = constant '–',
+    ['mdash']          = '—',
+    ['nbsp']           = ' ',
+    ['ndash']          = '–',
     ['note']           = Ic(pandoc.Note),
     ['paragraph']      = Bc(pandoc.Para),
     ['plain']          = Bc(pandoc.Plain),
     ['rawinline']      = I(flip(pandoc.RawInline)),
     ['singlequoted']   = Ic(papply(pandoc.Quoted, 'SingleQuote')),
-    ['space']          = I(pandoc.Space),
+    ['space']          = function () return Space end,
     ['span']           = Ic(pandoc.Span),
     ['strikeout']      = Ic(pandoc.Strikeout),
-    ['string']         = I(pandoc.Str),
+    ['string']         = function (s) return s end,
     ['strong']         = Ic(pandoc.Strong),
     ['subscript']      = Ic(pandoc.Subscript),
     ['superscript']    = Ic(pandoc.Superscript),
