@@ -37,7 +37,12 @@ end
 
 --- Accept the actual document as correct and rewrite the test file.
 local function accept_output(filename, testdoc, actual)
-  local actual_str = pandoc.write(actual, 'native')
+  local writer_opts = {}
+  if next(actual.meta) then
+    -- has metadata, use template
+    writer_opts.template = pandoc.template.default 'native'
+  end
+  local actual_str = pandoc.write(actual, 'native', writer_opts)
   local found_outblock = false
   testdoc = testdoc:walk{
     CodeBlock = function (cb)
@@ -58,8 +63,13 @@ end
 
 --- Report a test failure
 local function report_failure(actual, expected)
-  local actual_str = pandoc.write(actual, 'native')
-  local expected_str = pandoc.write(expected, 'native')
+  local opts = {}
+  if next(actual.meta) or next(expected.meta) then
+    -- has metadata, use template
+    opts.template = pandoc.template.default 'native'
+  end
+  local actual_str = pandoc.write(actual, 'native', opts)
+  local expected_str = pandoc.write(expected, 'native', opts)
   io.stderr:write('Expected:\n')
   io.stderr:write(expected_str)
   io.stderr:write('\n\n')
@@ -72,7 +82,7 @@ local function get_test (filepath)
   local filecontents = select(2, mediabag.fetch(filepath))
   local doc = pandoc.read(filecontents):walk{
     CodeBlock = function (cb)
-      if cb.identifier:match'^in' then
+      if cb.identifier:match'^in' or cb.classes[1] == 'markdown' then
         input = cb.text
       elseif is_output_code(cb) then
         expected = cb.text
