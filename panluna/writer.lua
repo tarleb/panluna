@@ -7,6 +7,7 @@ local M = {}
 local pandoc = require 'pandoc'
 local utils = require 'pandoc.utils'
 local List = require 'pandoc.List'
+local pdtype = utils.type
 
 --- Pandoc element representing a space character.
 -- Calling pandoc functions is computationally expensive, so calling it just
@@ -145,6 +146,31 @@ local function make_citations (text_cites, cites)
   return pandoc.Cite('placeholder', pdcites)
 end
 
+local function unrope_metadata (tbl)
+  if type(tbl) == 'table' and tbl[1] then
+    if pdtype(tbl[1]) == 'Inlines' or pdtype(tbl[1]) == 'string' then
+      return pandoc.Inlines(unrope(tbl))
+    elseif pdtype(tbl[1]) == 'Blocks' then
+      return pandoc.Blocks(unrope(tbl))
+    elseif type(tbl[1]) == 'function' then
+      local eval = function (x) return type(x) == 'function' and x() or x end
+      local evaled = List.map(tbl, eval)
+      return unrope_metadata(evaled)
+    else
+      return List.map(tbl, unrope_metadata)
+    end
+  elseif type(tbl) == 'table' then
+    for key, value in pairs(tbl) do
+      tbl[key] = unrope_metadata(value)
+    end
+    return tbl
+  elseif type(tbl) == 'function' then
+    return unrope_metadata(tbl())
+  else
+    return tbl
+  end
+end
+
 --- Creates an Attr object from a programming language specifier.
 local function lang_to_attr (lang)
   return {"", {utils.stringify(lang)}}
@@ -154,16 +180,18 @@ function M.new ()
   local metadata = {}
   local writer = {
     ['start_document'] = function ()
-      metadata = {}
-      return nil
+      return {}
     end,
     ['stop_document']  = function () return nil end,
     ['get_metadata']   = function ()
-      return metadata
+      return unrope_metadata(metadata)
+    end,
+    ['set_metadata']   = function (key, value)
+      metadata[key] = value
     end,
     ['rope_to_output'] = function (result)
       local blocks = unrope(result[2])
-      return blocks
+      return blocks, metadata
     end,
 
     -- Inline and block elements

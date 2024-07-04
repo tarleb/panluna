@@ -13,6 +13,7 @@ function Reader (inputs, opts)
     inline_notes = true,
     line_blocks = true,
     notes = false,
+    pandoc_title_blocks = true,
     pipe_tables = true,
     raw_attribute = true,
     smart = true,
