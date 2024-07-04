@@ -1,0 +1,146 @@
+#!/usr/bin/env pandoc-lua
+local io = require 'io'
+local os = require 'os'
+
+local pandoc   = require 'pandoc'
+local mediabag = require 'pandoc.mediabag'
+local path     = require 'pandoc.path'
+local system   = require 'pandoc.system'
+
+local reader = require 'lunamark.reader.markdown'
+local writer = require 'panluna.writer'
+
+local usage = [==[Usage:
+
+    %s [-a] TESTFILE
+
+Options:
+
+  -a: Accept the parse result as correct and update the test file.
+]==]
+
+local arg = arg
+local accept = false -- whether to accept output as correct
+for i = #arg, 1, -1 do
+  if arg[i] == '-a' then
+    accept = true
+    table.remove(arg, i)
+  end
+end
+
+
+local function is_output_code (codeblock)
+  return codeblock.identifier:match '^out'
+    or codeblock.identifier == 'expected'
+    or codeblock.classes:includes 'haskell'
+end
+
+--- Accept the actual document as correct and rewrite the test file.
+local function accept_output(filename, testdoc, actual)
+  local actual_str = pandoc.write(actual, 'native')
+  local found_outblock = false
+  testdoc = testdoc:walk{
+    CodeBlock = function (cb)
+      if is_output_code(cb) then
+        found_outblock = true
+        cb.text = actual_str
+        return cb
+      end
+    end
+  }
+  if not found_outblock then
+    doc.blocks:insert(pandoc.CodeBlock(actual_str, {'expected'}))
+  end
+  local fh = io.open(filename, 'w')
+  fh:write(pandoc.write(testdoc, 'markdown'))
+  fh:close()
+end
+
+--- Report a test failure
+local function report_failure(actual, expected)
+  local actual_str = pandoc.write(actual, 'native')
+  local expected_str = pandoc.write(expected, 'native')
+  io.stderr:write('Expected:\n')
+  io.stderr:write(expected_str)
+  io.stderr:write('\n\n')
+  io.stderr:write('Actual:\n')
+  io.stderr:write(actual_str)
+end
+
+local function get_test (filepath)
+  local input, expected, options = nil, nil, {}
+  local filecontents = select(2, mediabag.fetch(filepath))
+  local doc = pandoc.read(filecontents):walk{
+    CodeBlock = function (cb)
+      if cb.identifier:match'^in' then
+        input = cb.text
+      elseif is_output_code(cb) then
+        expected = cb.text
+      elseif cb.identifier == 'options' or cb.classes:includes 'lua' then
+        local ok, thunk = pcall(load, cb.text)
+        if ok then
+          options = thunk()
+        else
+          warn('Error parsing options: ', thunk)
+        end
+      end
+    end
+  }
+  return {
+    doc = doc,
+    filepath = filepath,
+    input = input .. '\n',  -- pandoc gobbles the final newline
+    expected = expected,
+    options = options,
+  }
+end
+
+--- Run the test in the given file.
+local function run_test_file (filepath)
+  local testfile = assert(filepath, "test file required")
+  local test = get_test(testfile)
+
+  assert(test.input, 'No input found in test file ' .. test.filepath)
+  assert(
+    accept or test.expected,
+    'No expected output found in test file ' .. test.filepath
+  )
+
+  local parser = reader.new(writer.new(), test.options)
+
+  local actual_doc = pandoc.Pandoc(parser(test.input .. '\n'))
+  local ok, expected_doc = pcall(pandoc.read, test.expected, 'native')
+
+  if ok and actual_doc == expected_doc then
+    return true
+  elseif accept then
+    accept_output(filepath, test.doc, actual_doc)
+    return true
+  elseif not ok then
+    io.stderr:write('Could not parse expected doc: \n' .. test.expected .. '\n')
+  else
+    report_failure(actual_doc, expected_doc)
+    return false
+  end
+end
+
+local source = arg[1]
+local success = true
+local is_dir, dirfiles = pcall(system.list_directory, source)
+local testfiles = pandoc.List{}
+if not is_dir then
+  testfiles:insert(source)
+else
+  local add_dir = function(p) return path.join{source, p} end
+  testfiles = pandoc.List(dirfiles):map(add_dir)
+end
+
+for _, testfile in ipairs(testfiles) do
+  success = success and run_test_file(testfile)
+end
+
+if success then
+  os.exit(0)
+else
+  os.exit(1)
+end
