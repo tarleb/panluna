@@ -42,43 +42,35 @@ local map = function (fn)
   return papply(flip(List.map), fn)
 end
 
---- Walk and flatten
---- FIXME: should use `lunamark.utils.rope`
-local function concat (list)
-  if type(list) ~= 'table' or not next(list) then
-    return pandoc.List{}
-  end
-
-  local mt = type(getmetatable(list[1])) == 'table' and getmetatable(list[1])
-  mt = mt.extend and mt or List  -- must quack like a list
-  local result = setmetatable({}, mt)
-  for _, item in ipairs(list) do
-    if type(item) == 'function' then
-      result:extend(flatten(item()))
-    elseif type(item) == 'string' then
-      result:extend(pandoc.Inlines(item))
+--- Turns a rope into a list.
+local function unrope (rope)
+    local typ = type(rope)
+    if typ == 'string' then
+      return rope == '' and List {} or List{pandoc.Str(rope)}
+    elseif typ == 'table' then
+      local result = List{}
+      for _, item in ipairs(List.map(rope, unrope)) do
+        result:extend(item)
+      end
+      return result
+    elseif typ == 'function' then
+      return unrope(rope())
     else
-      result:extend(item)
+      return List{rope}
     end
-  end
-  return result
 end
 
-local concat_args = function (fn)
+local unrope_args = function (fn)
   return function (args, ...)
-    return fn(concat(args), ...)
+    return fn(unrope(args), ...)
   end
 end
 
 local I = papply(compose, pandoc.Inlines)
-local Ic = function (fn)
-  return I(concat_args(fn))
-end
+local Ic = compose(I, unrope_args)
 
 local B = papply(compose, pandoc.Blocks)
-local Bc = function (fn)
-  return B(concat_args(fn))
-end
+local Bc = compose(B, unrope_args)
 
 local constant = function (c)
   return function () return pandoc.Inlines{pandoc.Str(c)} end
@@ -88,8 +80,8 @@ local function to_deflist_items (items)
   return List.map(
     items,
     function (item)
-      local term = concat(item.term)
-      local def = List(item.definitions):map(concat)
+      local term = unrope(item.term)
+      local def = List(item.definitions):map(unrope)
       return {term, def}
     end)
 end
@@ -98,7 +90,7 @@ local function task_items (rawitems)
   local items = List{}
   for _, item in ipairs(rawitems) do
     local marker = item[1] == '[ ]' and {"☐", Space} or {"☒", Space}
-    local content = concat(item[2])
+    local content = unrope(item[2])
     if content[1] and (content[1].t == 'Para' or content[1].t == 'Plain') then
       content[1].content = marker .. content[1].content
     else
@@ -137,8 +129,8 @@ local function to_pandoc_cite (text_cites)
     return pandoc.Citation(
       cite.name,
       cite.suppress_author and 'SuppressAuthor' or ct,
-      concat(cite.prenote),
-      concat(cite.postnote)
+      unrope(cite.prenote),
+      unrope(cite.postnote)
     )
   end
 end
@@ -164,11 +156,11 @@ function M.new ()
       return metadata
     end,
     ['rope_to_output'] = function (result)
-      local blocks = concat(result[2])
+      local blocks = unrope(result[2])
       return blocks
     end,
     ['blockquote'] = Bc(pandoc.BlockQuote),
-    ['bulletlist'] = B(compose(pandoc.BulletList, map(concat))),
+    ['bulletlist'] = B(compose(pandoc.BulletList, map(unrope))),
     ['citation'] = function(x) return x end,
     ['citations'] = I(make_citations),
     ['code'] = I(pandoc.Code),
