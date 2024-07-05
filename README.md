@@ -3,11 +3,12 @@ panluna
 
 A connector between [lunamark][] and [pandoc][].
 
-The [lunamark[]] project provides an extensible Markdown parser written with
-[LPeg][], a fast, efficient, and easy to use parsing library for [Lua][].
-[Pandoc][], the universal document converter, contains it's own Lua interpreter
-and can be extended in various ways via Lua, for example with a [custom Lua
-reader][]. This project allows to harness the extensibility of lunamark while
+The [lunamark][] project provides an extensible Markdown parser
+written with [LPeg][], a fast, efficient, and easy to use parsing
+library for [Lua][]. [Pandoc][], the universal document converter,
+contains it's own Lua interpreter and can be extended in various
+ways via Lua, for example with a [custom Lua reader][]. This
+project allows to harness the extensibility of lunamark while
 still using the full power of pandoc.
 
 
