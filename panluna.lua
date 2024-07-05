@@ -176,6 +176,28 @@ local function lang_to_attr (lang)
   return {"", {utils.stringify(lang)}}
 end
 
+--- Convert paragraphs to plain elements
+local function para_to_plain (blk)
+  if blk.t == 'Para' then
+    return pandoc.Plain(blk.content)
+  else
+    return blk
+  end
+end
+
+--- The identity function; simply returns its arguments.
+local function identity (...)
+  return ...
+end
+
+local function orderedlist (items, tight, start, numstyle, delim)
+  delim = delim == 'Default' and 'DefaultDelim' or delim
+  return pandoc.OrderedList(
+    List.map(items, unrope):map(tight and para_to_plain or identity),
+    pandoc.ListAttributes(start, numstyle, delim)
+  )
+end
+
 function M.new ()
   local metadata = {}
   local writer = {
@@ -219,6 +241,7 @@ function M.new ()
     ['nbsp']           = ' ',
     ['ndash']          = '–',
     ['note']           = Ic(pandoc.Note),
+    ['orderedlist']    = B(orderedlist),
     ['paragraph']      = Bc(pandoc.Para),
     ['plain']          = Bc(pandoc.Plain),
     ['rawinline']      = I(flip(pandoc.RawInline)),
