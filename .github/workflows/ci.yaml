@@ -32,7 +32,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: apk add make
+        run: apk add build-base git lua5.4-dev luarocks5.4 zip
+
+      - name: Install Lua dependencies
+        run: luarocks-5.4 install lunamark
 
       - name: Test
         run: make test
