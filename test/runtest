@@ -10,12 +10,12 @@ local mediabag = require 'pandoc.mediabag'
 local path     = require 'pandoc.path'
 local system   = require 'pandoc.system'
 
-local reader = require 'lunamark.reader.markdown'
-local writer = require 'panluna.writer'
+local reader   = require 'lunamark.reader.markdown'
+local panluna = require 'panluna'
 
 local usage = [==[Usage:
 
-    %s [-a] TESTFILE
+    runtest [-a] TESTFILE
 
 Options:
 
@@ -119,7 +119,7 @@ local function run_test_file (filepath)
     'No expected output found in test file ' .. test.filepath
   )
 
-  local parser = reader.new(writer.new(), test.options)
+  local parser = reader.new(panluna.new(), test.options)
 
   local actual_doc = pandoc.Pandoc(parser(test.input .. '\n'))
   local ok, expected_doc = pcall(pandoc.read, test.expected, 'native')

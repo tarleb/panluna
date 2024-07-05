@@ -1,5 +1,5 @@
 local reader = require 'lunamark.reader.markdown'
-local writer = require 'panluna.writer'
+local writer = require 'panluna'
 local pandoc = require 'pandoc'
 
 function Reader (inputs, opts)
