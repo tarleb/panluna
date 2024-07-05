@@ -6,6 +6,6 @@ The panluna library is versioned using [Semantic Versioning][].
 
 ## v0.1.0
 
-Release pending.
+Released 2024-07-05.
 
 - First release of the library; may it live long and prosper.
