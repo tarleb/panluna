@@ -213,7 +213,7 @@ function M.new ()
     end,
     ['rope_to_output'] = function (result)
       local blocks = unrope(result[2])
-      return blocks, metadata
+      return blocks
     end,
 
     -- Inline and block elements
@@ -259,6 +259,60 @@ function M.new ()
   }
 
   return writer
+end
+
+--- Mapping of pandoc extensions to lunamark options
+M.extensions_to_options = {
+  blank_before_blockquote        = 'require_blank_before_blockquote',
+  blank_before_fenced_code_block = 'require_blank_before_fenced_code_block',
+  blank_before_header            = 'require_blank_before_header',
+  bracketed_spans                = 'bracketed_spans',
+  citations                      = 'citations',
+  definition_lists               = 'definition_lists',
+  escaped_line_breaks            = 'escaped_line_breaks',
+  fancy_lists                    = 'fancy_lists',
+  fenced_code_blocks             = 'fenced_code_blocks',
+  fenced_divs                    = 'fenced_divs',
+  hash_enumerators               = 'hash_enumerators',
+  line_blocks                    = 'line_blocks',
+  pandoc_title_blocks            = 'pandoc_title_blocks',
+  pipe_tables                    = 'pipe_tables',
+  raw_attribute                  = 'raw_attribute',
+  smart                          = 'smart',
+  startnum                       = 'startnum',
+  strikeout                      = 'strikeout',
+  subscript                      = 'subscript',
+  superscript                    = 'superscript',
+  task_list                      = 'task_list',
+
+  -- unsupported:
+  --
+  -- fenced_code_attributes
+  -- header_attributes
+  -- inline_notes                   = 'inline_notes',
+  -- line_blocks
+  -- link_attributes
+  -- notes
+  -- preserve_tabs
+  -- raw_attribute
+}
+
+
+M.Extensions = function ()
+  local exts = {}
+  for ext in pairs(M.extensions_to_options) do
+    exts[ext] = true
+  end
+  return exts
+end
+
+M.to_lunamark_options = function (opts)
+  local options = {}
+  for _, ext in ipairs(opts.extensions) do
+    options[M.extensions_to_options[ext]] = true
+  end
+  options.preserve_tabs = opts.tab_stop == 0
+  return options
 end
 
 return M
