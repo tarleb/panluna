@@ -278,7 +278,9 @@ M.extensions_to_options = {
   fenced_code_blocks             = 'fenced_code_blocks',
   fenced_divs                    = 'fenced_divs',
   hash_enumerators               = 'hash_enumerators',
+  inline_notes                   = 'inline_notes',
   line_blocks                    = 'line_blocks',
+  notes                          = 'notes',
   pandoc_title_blocks            = 'pandoc_title_blocks',
   pipe_tables                    = 'pipe_tables',
   raw_attribute                  = 'raw_attribute',
@@ -293,10 +295,8 @@ M.extensions_to_options = {
   --
   -- fenced_code_attributes
   -- header_attributes
-  -- inline_notes                   = 'inline_notes',
   -- line_blocks
   -- link_attributes
-  -- notes
   -- preserve_tabs
   -- raw_attribute
 }
