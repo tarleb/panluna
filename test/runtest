@@ -65,7 +65,7 @@ local function accept_output(filename, testdoc, actual)
 end
 
 --- Report a test failure
-local function report_failure(actual, expected)
+local function report_failure(filepath, actual, expected)
   local opts = {}
   if next(actual.meta) or next(expected.meta) then
     -- has metadata, use template
@@ -73,6 +73,7 @@ local function report_failure(actual, expected)
   end
   local actual_str = pandoc.write(actual, 'native', opts)
   local expected_str = pandoc.write(expected, 'native', opts)
+  io.stderr:write('Failed: ' .. filepath .. '\n')
   io.stderr:write('Expected:\n')
   io.stderr:write(expected_str)
   io.stderr:write('\n\n')
@@ -132,7 +133,7 @@ local function run_test_file (filepath)
   elseif not ok then
     io.stderr:write('Could not parse expected doc: \n' .. test.expected .. '\n')
   else
-    report_failure(actual_doc, expected_doc)
+    report_failure(filepath, actual_doc, expected_doc)
     return false
   end
 end
