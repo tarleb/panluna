@@ -53,9 +53,7 @@ function Reader (inputs, opts)
 end
 ```
 
-Save it to a file ``
-
-Call pandoc with
+Save it to a file `panluna-reader.lua` and call pandoc with
 
     pandoc --from=panluna-reader.lua ...
 
@@ -65,7 +63,7 @@ Customizing
 -----------
 
 The Markdown parser can be extended with custom syntax. As an
-example, let's extend the parser such that [Quarto]-style
+example, let's extend the parser such that [Quarto][]-style
 [shortcodes][] `{{< text >}}` are read as code with class
 `shortcode`, i.e., like `` `text`{.shortcode} ``.
 
@@ -114,7 +112,7 @@ end
 ```
 
 [Quarto]: https://quarto.org/
-[shortcode]: https://quarto.org/docs/extensions/shortcodes.html
+[shortcodes]: https://quarto.org/docs/extensions/shortcodes.html
 
 
 Example: Glossary terms
