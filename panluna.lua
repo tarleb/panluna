@@ -238,7 +238,7 @@ function M.new ()
     ['inline_html']    = I(papply(pandoc.RawInline, 'html')),
     ['interblocksep']  = pandoc.Blocks{},
     ['link']           = Ic(pandoc.Link),
-    ['lineblock']      = Bc(pandoc.LineBlock),
+    ['lineblock']      = B(compose(pandoc.LineBlock, map(unrope))),
     ['linebreak']      = I(pandoc.LineBreak),
     ['mdash']          = '—',
     ['nbsp']           = ' ',
@@ -293,15 +293,13 @@ M.extensions_to_options = {
 
   -- unsupported:
   --
-  -- fenced_code_attributes
   -- header_attributes
-  -- line_blocks
   -- link_attributes
   -- preserve_tabs
   -- raw_attribute
 }
 
-
+--- Set of extensions; all extensions are enabled by default.
 M.Extensions = function ()
   local exts = {}
   for ext in pairs(M.extensions_to_options) do
