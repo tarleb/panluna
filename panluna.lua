@@ -247,6 +247,7 @@ function M.new ()
     ['orderedlist']    = B(orderedlist),
     ['paragraph']      = Bc(pandoc.Para),
     ['plain']          = Bc(pandoc.Plain),
+    ['rawblock']       = B(flip(pandoc.RawBlock)),
     ['rawinline']      = I(flip(pandoc.RawInline)),
     ['singlequoted']   = Ic(papply(pandoc.Quoted, 'SingleQuote')),
     ['space']          = function () return Space end,
@@ -292,10 +293,6 @@ M.extensions_to_options = {
   subscript                      = 'subscript',
   superscript                    = 'superscript',
   task_list                      = 'task_list',
-
-  -- unsupported:
-  --
-  -- raw_attribute
 }
 
 --- Set of extensions; all extensions are enabled by default.
