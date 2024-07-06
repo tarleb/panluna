@@ -171,11 +171,6 @@ local function unrope_metadata (tbl)
   end
 end
 
---- Creates an Attr object from a programming language specifier.
-local function lang_to_attr (lang)
-  return {"", {utils.stringify(lang)}}
-end
-
 --- Convert paragraphs to plain elements
 local function para_to_plain (blk)
   if blk.t == 'Para' then
@@ -196,6 +191,14 @@ local function orderedlist (items, tight, start, numstyle, delim)
     List.map(items, unrope):map(tight and para_to_plain or identity),
     pandoc.ListAttributes(start, numstyle, delim)
   )
+end
+
+--- Creates a CodeBlock; used by the fenced code parser.
+local function fenced_code (code, lang, attr)
+  if not attr then
+    attr = lang ~= '' and {'', {lang}} or nil
+  end
+  return pandoc.CodeBlock(code, attr)
 end
 
 function M.new ()
@@ -228,7 +231,7 @@ function M.new ()
     ['doublequoted']   = Ic(papply(pandoc.Quoted, 'DoubleQuote')),
     ['ellipsis']       = '…',
     ['emphasis']       = Ic(pandoc.Emph),
-    ['fenced_code']    = B(compose(flip(pandoc.CodeBlock), lang_to_attr)),
+    ['fenced_code']    = B(fenced_code),
     ['header']         = Bc(flip(pandoc.Header)),
     ['hrule']          = B(pandoc.HorizontalRule),
     ['image']          = Ic(pandoc.Image),
@@ -271,6 +274,7 @@ M.extensions_to_options = {
   definition_lists               = 'definition_lists',
   escaped_line_breaks            = 'escaped_line_breaks',
   fancy_lists                    = 'fancy_lists',
+  fenced_code_attributes         = 'fenced_code_attributes',
   fenced_code_blocks             = 'fenced_code_blocks',
   fenced_divs                    = 'fenced_divs',
   hash_enumerators               = 'hash_enumerators',
