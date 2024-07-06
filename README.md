@@ -100,7 +100,7 @@ function Reader (inputs, opts)
   local options = panluna.to_lunamark_options(opts)
 
   options.alter_syntax = function (syntax)
-    -- Try the glossary item parser first
+    -- Try the shortcode parser first
     syntax.Inline = shortcode + lpeg.V'Inline'
     return syntax
   end
