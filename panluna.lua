@@ -59,6 +59,8 @@ local function unrope (rope)
       return List{rope}
     end
 end
+--- Turns a lunamark rope into a list.
+M.unrope = unrope
 
 local unrope_args = function (fn)
   return function (args, ...)
@@ -304,6 +306,7 @@ M.Extensions = function ()
   return exts
 end
 
+--- Convert pandoc ReaderOptions to lunamark options.
 M.to_lunamark_options = function (opts)
   local options = {}
   for _, ext in ipairs(opts.extensions) do
