@@ -71,9 +71,9 @@ For that we define an LPeg pattern `shortcode` and update the
 syntax table to check for this pattern before trying any other
 inline elements.
 
-Lunamark allow to update the parser definitions via the
+Lunamark allows to update the parser definitions via the
 `alter_syntax` option. It must be set to a function that modifies
-the table of LPeg syntax parsers.
+the table of LPeg syntax definitions.
 
 ``` lua
 local mdreader = require 'lunamark.reader.markdown'
@@ -119,7 +119,7 @@ Example: Glossary terms
 -----------------------
 
 For a more involved example, we'll modify the parser such that
-`%word` is parsed as a way a glossary word and `%[glossary term]`
+`%word` is parsed as a glossary word and `%[glossary term]`
 as a glossary term.  Since pandoc has no concept of glossary
 items, we'll use `Span` elements with class `glossary` as the
 parse result.
@@ -186,8 +186,8 @@ doesn't allow to use Markdown syntax in glossary terms. Both the
 `glossary_term` pattern and the `create_glossary_span` function
 must be updated to fix this.
 
-Updating the `glossary_term` pattern is relatively
-straight-forward. Instead of single characters, we look for
+Updating the `glossary_term` pattern is
+straight-forward. Instead of parsing single characters, we look for
 `lpeg.V'Inline'` patterns, which are defined by lunamark. The
 capture must now be a table capture `lpeg.Ct`.
 
@@ -208,11 +208,11 @@ wrapping the result in an additional function to ensure delayed
 evaluation.
 
 ``` lua
-local create_glossary_span = function (content)
+local create_glossary_span = function (roped_content)
   -- extra function wrap to ensure delayed evaluation
   return function ()
     local attr = pandoc.Attr{class='glossar'}
-    local content = panluna.unrope(content)
+    local content = panluna.unrope(roped_content)
     return pandoc.Inlines(pandoc.Span(content, attr))
   end
 end
