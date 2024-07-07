@@ -285,6 +285,7 @@ M.extensions_to_options = {
   inline_notes                   = 'inline_notes',
   link_attributes                = 'link_attributes',
   line_blocks                    = 'line_blocks',
+  mark                           = 'mark',
   notes                          = 'notes',
   pandoc_title_blocks            = 'pandoc_title_blocks',
   pipe_tables                    = 'pipe_tables',
