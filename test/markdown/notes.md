@@ -19,13 +19,15 @@ Don't enter.[^1]
     , Space
     , Str "summer"
     , Note
-        [ Plain [ Str "It" ]
-        , Plain [ Space ]
-        , Plain [ Str "wasn't" ]
-        , Plain [ Space ]
-        , Plain [ Str "very" ]
-        , Plain [ Space ]
-        , Plain [ Str "summerly." ]
+        [ Plain
+            [ Str "It"
+            , Space
+            , Str "wasn't"
+            , Space
+            , Str "very"
+            , Space
+            , Str "summerly."
+            ]
         ]
     , Space
     , Str "was"

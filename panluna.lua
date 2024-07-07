@@ -203,6 +203,14 @@ local function fenced_code (code, lang, attr)
   return pandoc.CodeBlock(code, attr)
 end
 
+local function note (blocks_or_inlines_rope)
+  local unroped = unrope(blocks_or_inlines_rope)
+  if type(unroped) == 'table' and pdtype(unroped[1]) ~= 'Block' then
+    unroped = pandoc.Plain(unroped)
+  end
+  return pandoc.Note(unroped)
+end
+
 function M.new ()
   local metadata = {}
   local writer = {
@@ -245,7 +253,7 @@ function M.new ()
     ['mdash']          = '—',
     ['nbsp']           = ' ',
     ['ndash']          = '–',
-    ['note']           = Ic(pandoc.Note),
+    ['note']           = I(note),
     ['orderedlist']    = B(orderedlist),
     ['paragraph']      = Bc(pandoc.Para),
     ['plain']          = Bc(pandoc.Plain),
