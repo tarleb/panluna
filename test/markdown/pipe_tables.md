@@ -18,7 +18,9 @@ return {
 [ Table
     ( "" , [] , [] )
     (Caption Nothing [])
-    []
+    [ ( AlignDefault , ColWidthDefault )
+    , ( AlignDefault , ColWidthDefault )
+    ]
     (TableHead
        ( "" , [] , [] )
        [ Row

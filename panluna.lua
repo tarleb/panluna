@@ -127,10 +127,11 @@ end
 local function make_table (rows, caption)
   rows = List(rows):map(List)
   local aligns = List(rows:remove(2)):map(to_pandoc_alignment)
+  local widths = aligns:map(function () return 0 end)
   local headers = table.remove(rows, 1):map(unrope)
   local body = rows:map(unrope)
   return utils.from_simple_table(
-    pandoc.SimpleTable(caption or {}, aligns, {}, headers, body)
+    pandoc.SimpleTable(caption or {}, aligns, widths, headers, body)
   )
 end
 
