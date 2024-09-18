@@ -125,10 +125,12 @@ local function to_pandoc_alignment (align)
   end
 end
 local function make_table (rows, caption)
-  local aligns = List(table.remove(rows, 2)):map(to_pandoc_alignment)
-  local headers = table.remove(rows, 1)
+  rows = List(rows):map(List)
+  local aligns = List(rows:remove(2)):map(to_pandoc_alignment)
+  local headers = table.remove(rows, 1):map(unrope)
+  local body = rows:map(unrope)
   return utils.from_simple_table(
-    pandoc.SimpleTable(caption or {}, aligns, {}, headers, rows)
+    pandoc.SimpleTable(caption or {}, aligns, {}, headers, body)
   )
 end
 
