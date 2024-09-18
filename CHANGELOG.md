@@ -4,6 +4,12 @@ The panluna library is versioned using [Semantic Versioning][].
 
 [Semantic Versioning]: https://semver.org/
 
+## v0.2.3
+
+Released 2024-09-18.
+
+- Additional pipe table fixes.
+
 ## v0.2.2
 
 Released 2024-09-18.
