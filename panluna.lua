@@ -129,7 +129,15 @@ local function make_table (rows, caption)
   local aligns = List(rows:remove(2)):map(to_pandoc_alignment)
   local widths = aligns:map(function () return 0 end)
   local headers = table.remove(rows, 1):map(unrope)
-  local body = rows:map(unrope)
+  local body = {}
+  local make_plain = function(inlines)
+    return next(inlines)
+      and pandoc.Plain(inlines)
+      or inlines
+  end
+  for i, row in ipairs(rows) do
+    body[i] = row:map(compose(make_plain, unrope))
+  end
   return utils.from_simple_table(
     pandoc.SimpleTable(caption or {}, aligns, widths, headers, body)
   )
