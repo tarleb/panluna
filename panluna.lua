@@ -1,4 +1,4 @@
--- Copyright © 2024 Albert Krewinkel. Released under MIT license.
+-- Copyright © 2024-2025 Albert Krewinkel. Released under MIT license.
 -- See the file LICENSE in the source for details.
 
 --- Lunamark writer that produces a Pandoc document.
